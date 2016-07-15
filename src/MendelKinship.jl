@@ -68,8 +68,7 @@ function Kinship(control_file = ""; args...)
   #
   println(" \nAnalyzing the data.\n")
   execution_error = false
-  coefficient_frame = kinship_option(pedigree, person, nuclear_family,
-    locus, locus_frame, phenotype_frame, pedigree_frame, keyword)
+  coefficient_frame = kinship_option(pedigree, person, keyword)
   show(coefficient_frame)
   if execution_error
     println(" \n \nERROR: Mendel terminated prematurely!\n")
