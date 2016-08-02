@@ -6,14 +6,14 @@ The remaining identity coefficients of Jacquard are computed by simulation.
 """
 module MendelKinship
 #
-# Other OpenMendel modules.
+# Required OpenMendel packages and modules.
 #
 using MendelBase
-# using DataStructures
+# using DataStructures                  # Now in MendelBase.
 #
-# External modules.
+# Required external modules.
 #
-using DataFrames    # From package DataFrames.
+using DataFrames                        # From package DataFrames.
 
 export Kinship
 
@@ -39,9 +39,12 @@ function Kinship(control_file = ""; args...)
   #
   keyword = set_keyword_defaults!(Dict{ASCIIString, Any}())
   #
-  # Keywords unique to this analysis may be defined here
+  # Keywords unique to this analysis should be first defined here
   # by setting their default values using the format:
-  # keyword["some_keyword_name"] = value
+  # keyword["some_keyword_name"] = default_value
+  #
+  keyword["kinship_file"] = "Kinship_Frame.txt"
+  keyword["repetitions"] = 1
   #
   # Process the run-time user-specified keywords that will control the analysis.
   # This will also initialize the random number generator.
