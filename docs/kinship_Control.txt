@@ -2,9 +2,9 @@
 # Input and Output files.
 #
 pedigree_file = kinship_PedigreeFrame.txt
-kinship_file = kinship_KinshipFrame_Output.txt
+kinship_output_file = kinship_file_Output.txt
 output_file = kinship_Output.txt
 #
-# Analysis parameters.
+# Analysis parameters for Kinship option.
 #
 repetitions = 1000

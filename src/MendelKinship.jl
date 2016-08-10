@@ -43,7 +43,7 @@ function Kinship(control_file = ""; args...)
   # by setting their default values using the format:
   # keyword["some_keyword_name"] = default_value
   #
-  keyword["kinship_file"] = "Kinship_Frame.txt"
+  keyword["kinship_output_file"] = "Kinship_Output_File.txt"
   keyword["repetitions"] = 1
   keyword["xlinked_analysis"] = false
   #
@@ -171,7 +171,7 @@ function kinship_option(pedigree::Pedigree, person::Person,
   #
   # Write the combined coefficient frame to a file and return.
   #
-  writetable(keyword["kinship_file"], combined_dataframe)
+  writetable(keyword["kinship_output_file"], combined_dataframe)
   return combined_dataframe
 end # function kinship_option
 
