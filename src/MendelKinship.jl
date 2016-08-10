@@ -45,6 +45,7 @@ function Kinship(control_file = ""; args...)
   #
   keyword["kinship_file"] = "Kinship_Frame.txt"
   keyword["repetitions"] = 1
+  keyword["xlinked_analysis"] = false
   #
   # Process the run-time user-specified keywords that will control the analysis.
   # This will also initialize the random number generator.
