@@ -1,4 +1,4 @@
-# MendelKinship
+https://github.com/# MendelKinship
 
 This [Julia](http://julialang.org/) package computes genetic kinship and other identity coefficients. MendelKinship is one component of the umbrella [OpenMendel](https://openmendel.github.io) project.
 
@@ -10,7 +10,7 @@ This [Julia](http://julialang.org/) package computes genetic kinship and other i
 
 Within Julia, use the package manager to install MendelKinship:
 
-    Pkg.clone("git@github.com:OpenMendel/MendelKinship.jl.git")
+    Pkg.clone("https://github.com/OpenMendel/MendelKinship.jl.git")
 
 This package supports Julia v0.4.
 
