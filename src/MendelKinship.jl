@@ -37,7 +37,7 @@ function Kinship(control_file = ""; args...)
   # The user specifies the analysis to perform via a set of keywords.
   # Start the keywords at their default values.
   #
-  keyword = set_keyword_defaults!(Dict{ASCIIString, Any}())
+  keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
   #
   # Keywords unique to this analysis should be first defined here
   # by setting their default values using the format:
@@ -95,7 +95,7 @@ and Jacquard's 9 identity coefficients stochastically.
 The results are placed in a dataframe.
 """
 function kinship_option(pedigree::Pedigree, person::Person,
-  keyword::Dict{ASCIIString, Any})
+  keyword::Dict{AbstractString, Any})
 
   pedigrees = pedigree.pedigrees
   repetitions = keyword["repetitions"]
