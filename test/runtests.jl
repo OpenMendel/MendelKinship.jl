@@ -1,4 +1,3 @@
-module PkgTest
 using MendelKinship
 using Base.Test
 
