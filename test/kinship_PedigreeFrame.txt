@@ -9,5 +9,6 @@ Pedigree,Person,Mother,Father,Sex,Twin
 2,8,0,0,female,0
 2,9,8,7,female,1
 2,10,8,7,female,1
-2,11,8,7,male,0
+2,11,8,7,female,1
 2,12,8,7,male,0
+2,13,8,7,male,0

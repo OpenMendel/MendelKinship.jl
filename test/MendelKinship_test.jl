@@ -148,6 +148,91 @@ end
     @test delta7_matrix[5, 6] == 0.25 * 0.25 + 0.5 * 0.25 + 0.25 * 0.5
 end
 
+#
+# Need a function that spits out a kinship matrix without extening to co-twins
+# to fully test whether cotwin_extension is working properly.
+#
+function kinship_matrix_notwin(pedigree::Pedigree, person::Person,
+  ped::Int, xlinked::Bool)
+  #
+  # Allocate a kinship matrix and an offset.
+  #
+  start = pedigree.start[ped]
+  finish = pedigree.finish[ped]
+  kinship = zeros(pedigree.individuals[ped], pedigree.individuals[ped])
+  q = start - 1
+  for i = start:finish
+    #
+    # Initialize the kinship coefficients for founders.
+    #
+    j = person.mother[i]
+    if j == 0
+      if xlinked && person.male[i]
+        kinship[i - q, i - q] = 1.0
+      else
+        kinship[i - q, i - q] = 0.5
+      end
+    else
+      #
+      # Compute the kinship coefficients of descendants by averaging.
+      #
+      if xlinked && person.male[i]
+        kinship[i - q, i - q] = 1.0
+        for m = start:i - 1
+          kinship[i - q, m - q] = kinship[j - q, m - q]
+          kinship[m - q, i - q] = kinship[i - q, m - q]
+        end
+      else
+        k = person.father[i]
+        kinship[i - q, i - q] = 0.5 + 0.5 * kinship[j - q, k - q]
+        for m = start:i - 1
+          kinship[i - q, m - q] = 0.5 * (kinship[j - q, m - q]
+             + kinship[k - q, m - q])
+          kinship[m - q, i - q] = kinship[i - q, m - q]
+        end
+      end
+    end
+  end
+  #
+  # Extend the kinship matrix to co-twins.
+  #
+  # cotwin_extension!(kinship, pedigree, person, ped)
+  return kinship
+end # function kinship_matrix_notwin
+
+@testset "cotwin_extension!" begin
+    keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
+    keyword["kinship_output_file"] = "Kinship_Output_File.txt"
+    process_keywords!(keyword, "kinship_Control.txt", "")
+    (pedigree, person, nuclear_family, locus, snpdata,
+    locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
+        read_external_data_files(keyword)
+
+    # compute kinship matrix without extending to cotwins
+    matrix1 = kinship_matrix_notwin(pedigree, person, 1, false) 
+    matrix2 = kinship_matrix_notwin(pedigree, person, 2, false)
+
+    @test issymmetric(matrix1)
+    @test issymmetric(matrix2)
+    @test eltype(matrix2) == Float64
+    @test eltype(matrix1) == Float64
+    @test size(matrix1) == (6, 6) 
+    @test size(matrix2) == (7, 7)
+
+    @test length(find(matrix1)) == 34 # only 2 element of 6x6 matrix is 0
+    @test all(matrix2[6, :] .== 0.0) == true #twins have 0 values before calling cotwin_extension
+    @test all(matrix2[7, :] .== 0.0) == true
+
+    MendelKinship.cotwin_extension!(matrix1, pedigree, person, 1)
+    MendelKinship.cotwin_extension!(matrix2, pedigree, person, 2)
+
+    @test size(matrix1) == (6, 6) # size didn't change
+    @test size(matrix2) == (7, 7)
+    @test length(find(matrix1)) == 34 # non-zero values should not change since no twins
+    @test matrix2[6, :] == matrix2[5, :] #twins got reassigned
+    @test matrix2[7, :] == matrix2[5, :] #twins got reassigned
+end
+
 @testset "jacquard_coefficients" begin
     keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
     keyword["kinship_output_file"] = "Kinship_Output_File.txt"
@@ -159,10 +244,6 @@ end
     MendelKinship.jacquard_coefficients(pedigree, person, 1, 1000, false) #1000 repetition = default
 
 
-end
-
-@testset "cotwin_extension!" begin
-    
 end
 
 @testset "basics & wrapper functions" begin
