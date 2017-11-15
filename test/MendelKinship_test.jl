@@ -76,7 +76,7 @@ end
     #
     for i = 1:4
         a, b, c, d = i, i + 1, i + 2, i + 3
-        b = mod(b - 1, 4) + 1 # subtract 1, mod, then add one at the end. This skips 0.
+        b = mod(b - 1, 4) + 1 # subtract 1, mod, then add one. Doing so skips 0.
         c = mod(c - 1, 4) + 1
         d = mod(d - 1, 4) + 1
 
@@ -105,15 +105,47 @@ end
     (pedigree, person, nuclear_family, locus, snpdata,
     locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
         read_external_data_files(keyword)
-
+    #
+    #   This is the probability that two individuals share both of their alleles 
+    #   identity by descent. It's case 7 on page 10 of 
+    #   http://faculty.washington.edu/tathornt/BIOST551/lectures_2012/Lecture7_Coefficients_of_Identity_and_Coancestry.pdf
+    #
     kinship_matrix = MendelKinship.kinship_matrix(pedigree, person, 1, false)
     delta7_matrix = MendelKinship.delta7_matrix(pedigree, person, kinship_matrix, 1)
-    #
-    #   This seems to be the fraternity coefficient. It is the probability that 
-    #   two individuals share both of their alleles identity by descent.
-    #
+    @test issymmetric(delta7_matrix)
+    @test eltype(delta7_matrix) == Float64
+    @test size(delta7_matrix) == (6, 6)
 
+    for i = 1:size(delta7_matrix, 1)
+        @test delta7_matrix[i, i] == 1.0 #one is always IBD for both alleles to oneself
+    end
 
+    # founders are not related, and founders and their kid cannot be fraternity brothers
+    # since 1 parent can only pass on 1 of his alleles. 
+    @test delta7_matrix[1, 2] == 0.0 
+    @test delta7_matrix[1, 3] == 0.0
+    @test delta7_matrix[1, 4] == 0.0
+    @test delta7_matrix[1, 5] == 0.0
+    @test delta7_matrix[1, 6] == 0.0
+
+    # Assume father = (A1, A2) and mother = (A3, A4), with 2 kids = person 3 and 4.
+    # Say father passes down A1 to person 3, then person 4 also receiving this has 
+    # probability 0.5. Then the mother passes down A3 or A4, so the other kid also receiving 
+    # it has probability 0.5. Thus person 3 & 4 shares alleles with probability 0.5 * 0.5. 
+    @test delta7_matrix[3, 4] == 0.5 * 0.5
+    # Then person 3 and person 4 mated, giving birth to person 5 & 6. Person 3 donates one of 
+    # its allele with probability 1, and for person 5 to be share both alleles with its parents,
+    # person 4 must donate the correct half with probability 0.5. Thus
+    @test delta7_matrix[3, 5] == 0.5 * (0.5 * 0.5)
+    @test delta7_matrix[3, 6] == 0.5 * (0.5 * 0.5)
+    @test delta7_matrix[4, 5] == 0.5 * (0.5 * 0.5)
+    @test delta7_matrix[4, 6] == 0.5 * (0.5 * 0.5)
+    # Finally,
+    # P(5 & 6 share 2 alleles) = 
+    #     P(5 and 6 share 2 | 3 & 4 share none) 
+    #   + P(5 and 6 share 2 | 3 & 4 share 1) 
+    #   + P(5 and 6 share 2 | 3 & 4 share 2) ... which we can calculate by hand:
+    @test delta7_matrix[5, 6] == 0.25 * 0.25 + 0.5 * 0.25 + 0.25 * 0.5
 end
 
 @testset "jacquard_coefficients" begin
