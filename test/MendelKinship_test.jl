@@ -2,6 +2,8 @@ using MendelKinship
 using MendelBase
 using DataFrames 
 
+srand(123)
+
 @testset "kinship_matrix" begin
     keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
     keyword["kinship_output_file"] = "Kinship_Output_File.txt"
@@ -241,9 +243,29 @@ end
     locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
         read_external_data_files(keyword)
 
-    MendelKinship.jacquard_coefficients(pedigree, person, 1, 1000, false) #1000 repetition = default
+    n = 1000 #default number of repetition
+    matrix = MendelKinship.jacquard_coefficients(pedigree, person, 1, n, false) 
+    @test size(matrix) == (9, 6, 6)
+    @test eltype(matrix) == Float64
 
-
+    # testing some values, but they weren't checked by hand.
+    @test all(matrix[1, :, 1] .== 0.0)
+    @test matrix[3, 5, 1] == 0.119
+    @test matrix[8, 6, 1] == 0.491
+    @test all(matrix[2, :, 2] .== 0.0)
+    @test matrix[4, 5, 2] == 0.119
+    @test matrix[9, 1, 2] == 1.0
+    @test matrix[3, 3, 3] == 0.0
+    @test matrix[7, 4, 3] == 0.23
+    @test matrix[8, 5, 3] == 0.509
+    @test matrix[3, 6, 4] == 0.229
+    @test all(matrix[5, :, 4] .== 0.0)
+    @test matrix[1, 5, 5] == 0.237
+    @test matrix[1, 4, 5] == 0.0
+    @test matrix[5, 1, 5] == 0.119
+    @test matrix[6, 6, 6] == 0.0
+    @test matrix[2, 5, 6] == 0.031
+    @test matrix[7, 2, 6] == 0.128
 end
 
 @testset "basics & wrapper functions" begin
