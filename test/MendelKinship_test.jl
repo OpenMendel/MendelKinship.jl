@@ -269,5 +269,37 @@ end
 end
 
 @testset "basics & wrapper functions" begin
-    
+    keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
+    keyword["kinship_output_file"] = "Kinship_Output_File.txt"
+    keyword["xlinked_analysis"] = false
+    process_keywords!(keyword, "kinship_Control.txt", "")
+    (pedigree, person, nuclear_family, locus, snpdata,
+    locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
+        read_external_data_files(keyword)
+
+    result = MendelKinship.kinship_option(pedigree, person, keyword)
+    kinship_matrix = MendelKinship.kinship_matrix(pedigree, person, 1, false)
+    delta7_matrix = MendelKinship.delta7_matrix(pedigree, person, kinship_matrix, 1)
+
+    # test values to see if numbers are matching. 
+    # Note that result matrix removed all redundant rows,
+    # (e.g. X[3, 4] == X[4, 3] so one X[3, 4] will be listed)
+    @test size(result) == (49, 14)
+    @test all(result[1:6, 5] .== delta7_matrix[1, 1:6])
+    @test all(result[7:11, 5] .== delta7_matrix[2, 2:6]) 
+    # @test all(result[12:15, 5] .== delta7_matrix[3, 3:6]) #turns out the structure of output is more compact than this.
+    # @test all(result[16:18, 5] .== delta7_matrix[4, 4:6]) 
+    # @test all(result[19:20, 5] .== delta7_matrix[5, 5:6]) 
+    #@test result[21, 1] == delta7_matrix[6, 6]
+    @test all(result[1:6, 4] .== kinship_matrix[1, 1:6])
+    @test all(result[7:11, 4] .== kinship_matrix[2, 2:6]) 
+    #@test all(result[12:15, 4] .== kinship_matrix[3, 3:6]) #turns out the structure of output is more compact than this.
+    #@test all(result[16:18, 4] .== kinship_matrix[4, 4:6]) 
+    #@test all(result[19:20, 4] .== kinship_matrix[5, 5:6]) 
+    #@test result[21, 1] == kinship_matrix[6, 6]
+
+    #final test, if no error then should return nothing.
+    @test Kinship("kinship_Control.txt") == nothing
+
+    #current coverage = 145/158
 end
