@@ -1,0 +1,14 @@
+Pedigree,Person,Mother,Father,Sex,Twin
+1,1,0,0,male,0
+1,2,0,0,female,0
+1,3,2,1,male,0
+1,4,2,1,female,0
+1,5,4,3,male,0
+1,6,4,3,female,0
+2,7,0,0,male,0
+2,8,0,0,female,0
+2,9,8,7,female,1
+2,10,8,7,female,1
+2,11,8,7,female,1
+2,12,8,7,male,0
+2,13,8,7,male,0
