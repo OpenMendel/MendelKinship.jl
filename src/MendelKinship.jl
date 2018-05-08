@@ -9,7 +9,9 @@ module MendelKinship
 # Required OpenMendel packages and modules.
 #
 using MendelBase
-# using DataStructures                  # Now in MendelBase.
+##
+using SnpArrays
+##
 #
 # Required external modules.
 #
@@ -46,6 +48,12 @@ function Kinship(control_file = ""; args...)
   keyword["kinship_output_file"] = "Kinship_Output_File.txt"
   keyword["repetitions"] = 1
   keyword["xlinked_analysis"] = false
+##
+  keyword["compare_kinships"] = true
+  keyword["maf_threshold"] = 0.01
+  keyword["grm_method"] = "GRM" # MoM alternative
+  keyword["deviant_pairs"] = 0
+##
   #
   # Process the run-time user-specified keywords that will control the analysis.
   # This will also initialize the random number generator.
@@ -72,8 +80,22 @@ function Kinship(control_file = ""; args...)
   #
   println(" \nAnalyzing the data.\n")
   execution_error = false
-  coefficient_frame = kinship_option(pedigree, person, keyword)
-  show(coefficient_frame)
+##
+  if keyword["compare_kinships"] == false
+    coefficient_dataframe = kinship_option(pedigree, person, keyword)
+    show(coefficient_dataframe)
+  else
+    #
+    # don't run if there's no snp data. Don't run if snp id and/or person name is not unique
+    #
+    snpdata.snps != 0 || throw(ArgumentError("Need Snp data files to compare kinships"))
+    snpdata.personid == unique(snpdata.personid) || throw(ArgumentError("non-unique snp ids"))
+    person.name == unique(person.name) || throw(ArgumentError("non-unique person names"))
+
+    kinship_frame = compare_kinships(pedigree, person, snpdata, keyword)
+    return kinship_frame
+  end
+##
   if execution_error
     println(" \n \nERROR: Mendel terminated prematurely!\n")
   else
@@ -87,6 +109,128 @@ function Kinship(control_file = ""; args...)
   cd(initial_directory)
   return nothing
 end # function Kinship
+
+###
+"""Compares theoretical and empirical kinship coefficients."""
+
+function compare_kinships(pedigree::Pedigree, person::Person,
+  snpdata::SnpData, keyword::Dict{AbstractString, Any})
+
+  people = person.people
+  pedigrees = pedigree.pedigrees
+  xlinked = keyword["xlinked_analysis"]
+  maf_threshold = keyword["maf_threshold"]
+  deviant_pairs = keyword["deviant_pairs"]
+  if deviant_pairs == 0
+    deviant_pairs = people^2
+  end
+  #
+  # a vector to hold kinship matrices, one for each pedigree
+  #
+  kinship = Vector{Matrix{Float64}}(pedigrees)
+  #
+  # Because open mendel will permute people, we undo the permutation here to match 
+  # up with GRM. GRM never permutes people.
+  #
+#
+# Since people are reordered, compute identification maps.
+# i.e. Matches positions of ids in two strings of ids
+# 
+  # ipermute!(person.name, person.inverse_permutation)
+  name_to_id = indexin(person.name, snpdata.personid)
+  id_to_name = indexin(snpdata.personid, person.name)
+#
+# Compute and transform the genetic relationship matrix.
+#
+  if keyword["grm_method"] == "GRM"
+    GRM = grm(snpdata.snpmatrix, method=:GRM, maf_threshold=maf_threshold)
+  else
+    GRM = grm(snpdata.snpmatrix, method=:MoM)
+  end
+  clamp!(GRM, -0.99999, 0.99999) 
+  map!(x -> atanh(x), GRM, GRM) #fisher's transformation
+#
+# Loop over all pedigrees.
+#
+  for ped = 1:pedigrees
+#
+# Compute theoretical coefficients and adjust the GRM matrix.
+#
+    #calling kinship requires parents preceding children
+    kinship[ped] = kinship_matrix(pedigree, person, ped, xlinked)
+    q = pedigree.start[ped] - 1
+    for i = 1:pedigree.individuals[ped] #loop over every person in each pedigree
+      ii = name_to_id[i + q]
+      if ii == 0; continue; end
+      for j = i:pedigree.individuals[ped] 
+        jj = name_to_id[j + q]
+        if jj == 0; continue; end       
+        GRM[ii, jj] = GRM[ii, jj] - atanh(kinship[ped][i, j])
+        GRM[jj, ii] = GRM[ii, jj]
+      end
+    end
+  end
+#
+# Find the indices of the most deviant pairs.
+#
+  p = selectperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
+  (rowindex, columnindex) = ind2sub((people, people), p)
+#
+# Enter the most deviant pairs into a data frame.
+#
+  kinship_frame = DataFrame(Pedigree1 = String[], Pedigree2 = String[], 
+    Person1 = String[], Person2 = String[], theoretical_kinship= Float64[], 
+    empiric_kinship=Float64[])
+  r = 0.0
+  for k = 1:deviant_pairs
+    (ii, jj) = (rowindex[k], columnindex[k]) #index of kth largest deviation
+    (i, j) = (id_to_name[ii], id_to_name[jj]) #maps snp back to person name
+    (pedi, pedj) = (person.pedigree[i], person.pedigree[j]) #the pedigree person belongs    
+    if pedi == pedj
+      q = pedigree.start[pedi] - 1
+      r = GRM[ii, jj] + atanh(kinship[pedi][i - q, j - q]) 
+      push!(kinship_frame, [pedigree.name[pedi], pedigree.name[pedj], person.name[i], 
+        person.name[j], kinship[pedi][i - q, j - q], tanh(r)])     
+    else
+      push!(kinship_frame, [pedigree.name[pedi], pedigree.name[pedj], person.name[i], 
+        person.name[j], 0.0, tanh(GRM[ii, jj])])
+    end
+  end
+  return kinship_frame
+end
+
+# """Matches positions of ids in two strings of ids."""
+
+# function correspond(x::Vector{String}, y::Vector{String})
+#   (m, n) = (length(x), length(y))
+#   xperm = sortperm(x)
+#   yperm = sortperm(y)
+#   x_to_y = zeros(Int, m)
+#   y_to_x = zeros(Int, n)
+#   (i, j) = (1, 1)
+#   done = false
+#   while !done
+#     ii = xperm[i]
+#     jj = yperm[j]
+#     if x[ii] == y[jj]
+#       x_to_y[ii] = jj
+#       y_to_x[jj] = ii
+#       (i, j) = (i + 1, j + 1)
+#     elseif x[ii] < y[jj]
+#       i = i +1
+#     elseif y[jj] < x[ii]
+#       j = j + 1
+#     end
+#     done = i > m || j > n
+#   end
+#   return (x_to_y, y_to_x)
+# end
+
+# x = ["the", "and", "a", "be", "an"]
+# y = ["but", "be", "a", "an", "so"]
+# (x_to_y, y_to_x) = correspond(x, y)
+#just use indexin(x, y)
+
 
 """
 This function orchestrates the computation via gene dropping
@@ -153,7 +297,7 @@ function kinship_option(pedigree::Pedigree, person::Person,
   end
   #
   # Join the separate dataframes, and sort the combined dataframe so
-  # that relative pairs are lumped by pedigree..
+  # that relative pairs are lumped by pedigree.
   #
   if xlinked
     combined_dataframe = join(kinship_dataframe, coefficient_dataframe,
