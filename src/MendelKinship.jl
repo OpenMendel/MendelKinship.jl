@@ -137,13 +137,19 @@ function compare_kinships(pedigree::Pedigree, person::Person,
 # i.e. Matches positions of ids in two strings of ids
 # 
   # ipermute!(person.name, person.inverse_permutation)
-  name_to_id = indexin(person.name, snpdata.personid)
-  id_to_name = indexin(snpdata.personid, person.name)
+  snpid = deepcopy(snpdata.personid)
+  ipermute!(snpid, person.inverse_permutation) #permute snpid back to original person names
+  name_to_id = indexin(person.name, snpid)
+  id_to_name = indexin(snpid, person.name)
 #
 # Compute and transform the genetic relationship matrix.
 #
   if keyword["grm_method"] == "GRM"
     GRM = grm(snpdata.snpmatrix, method=:GRM, maf_threshold=maf_threshold)
+    # snpmatrix_test = SnpArray(keyword["snpdata_file"], people = person.people,
+    #   snps = size(snp_definition_frame, 1))
+    # GRM_test = grm(snpmatrix_test, method=:GRM, maf_threshold=0.01)
+    # all(GRM_test .== GRM) is true, so the GRM matrix is doing what its supposed to do 
   else
     GRM = grm(snpdata.snpmatrix, method=:MoM)
   end
@@ -159,12 +165,12 @@ function compare_kinships(pedigree::Pedigree, person::Person,
     #calling kinship requires parents preceding children
     kinship[ped] = kinship_matrix(pedigree, person, ped, xlinked)
     q = pedigree.start[ped] - 1
-    for i = 1:pedigree.individuals[ped] #loop over every person in each pedigree
-      ii = name_to_id[i + q]
-      if ii == 0; continue; end
-      for j = i:pedigree.individuals[ped] 
-        jj = name_to_id[j + q]
-        if jj == 0; continue; end       
+    for j = 1:pedigree.individuals[ped]
+      jj = name_to_id[j + q]
+      if jj == 0; continue; end
+      for i = j:pedigree.individuals[ped]
+        ii = name_to_id[i + q]
+        if ii == 0; continue; end
         GRM[ii, jj] = GRM[ii, jj] - atanh(kinship[ped][i, j])
         GRM[jj, ii] = GRM[ii, jj]
       end
@@ -200,8 +206,7 @@ function compare_kinships(pedigree::Pedigree, person::Person,
 end
 
 # """Matches positions of ids in two strings of ids."""
-
-# function correspond(x::Vector{String}, y::Vector{String})
+# function correspond(x::Array{AbstractString}, y::Array{AbstractString})
 #   (m, n) = (length(x), length(y))
 #   xperm = sortperm(x)
 #   yperm = sortperm(y)
