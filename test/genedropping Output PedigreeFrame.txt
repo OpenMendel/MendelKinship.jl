@@ -1,0 +1,66 @@
+"Pedigree","Person","Mother","Father","Sex","Twin","BirthYear","Politician","European","African","Chinese","ABO","Rh","Xg","XSNP","HtMeters"
+"Bush1","George",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","B/A","D/D","+/+","1/1","1.82"
+"Bush1","Laura",NA,NA,"female","0","1946.0","false","1.0","0.0","0.0","A/A","d/D","+/+","1/2",NA
+"Bush1","Henry Hagar",NA,NA,"male","0","1978.0","false","1.0","0.0","0.0","A/A","D/D","+/+","1/1",NA
+"Bush1","Barbara","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/A","d/D","+/+","1/1",NA
+"Bush1","Jenna","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/A","d/D","+/+","1/1",NA
+"Bush1","Margaret","Jenna","Henry Hagar","female","0","2013.0","false",NA,NA,NA,"A/A","D/D","+/+","1/1",NA
+"Clinton1","Bill",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","A/A","D/D","+/+","2/2","1.88"
+"Clinton1","Hillary",NA,NA,"female","0","1947.0","true","1.0","0.0","0.0","A/A","d/d","-/-","1/1",NA
+"Clinton1","Chelsea","Hillary","Bill","female","0","1980.0","false",NA,NA,NA,"A/A","d/D","-/+","1/2",NA
+"Obama1","Barack",NA,NA,"male","0","1961.0","true","0.5","0.5","0.0","O/O","D/D","+/+","1/1","1.85"
+"Obama1","Michelle",NA,NA,"female","0","1964.0","false","0.3","0.7","0.0","B/O","D/D","+/+","2/2",NA
+"Obama1","Malia","Michelle","Barack","female","0","1998.0","false",NA,NA,NA,"O/O","D/D","+/+","2/1",NA
+"Obama1","Sasha","Michelle","Barack","female","0","2001.0","false",NA,NA,NA,"B/O","D/D","+/+","2/1",NA
+"Bush2","George",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","A/B","D/D","+/+","1/1","1.82"
+"Bush2","Laura",NA,NA,"female","0","1946.0","false","1.0","0.0","0.0","B/A","D/D","+/+","1/2",NA
+"Bush2","Henry Hagar",NA,NA,"male","0","1978.0","false","1.0","0.0","0.0","A/A","D/d","+/+","1/1",NA
+"Bush2","Barbara","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/B","D/D","+/+","2/1",NA
+"Bush2","Jenna","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/B","D/D","+/+","2/1",NA
+"Bush2","Margaret","Jenna","Henry Hagar","female","0","2013.0","false",NA,NA,NA,"A/A","D/d","+/+","2/1",NA
+"Clinton2","Bill",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","A/A","d/D","+/+","2/2","1.88"
+"Clinton2","Hillary",NA,NA,"female","0","1947.0","true","1.0","0.0","0.0","A/A","d/d","-/-","1/1",NA
+"Clinton2","Chelsea","Hillary","Bill","female","0","1980.0","false",NA,NA,NA,"A/A","d/d","-/+","1/2",NA
+"Obama2","Barack",NA,NA,"male","0","1961.0","true","0.5","0.5","0.0","O/O","d/D","-/-","1/1","1.85"
+"Obama2","Michelle",NA,NA,"female","0","1964.0","false","0.3","0.7","0.0","B/B","d/D","+/+","2/2",NA
+"Obama2","Malia","Michelle","Barack","female","0","1998.0","false",NA,NA,NA,"B/O","d/d","+/-","2/1",NA
+"Obama2","Sasha","Michelle","Barack","female","0","2001.0","false",NA,NA,NA,"B/O","D/d","+/-","2/1",NA
+"Bush3","George",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","A/B","D/D","+/+","1/1","1.82"
+"Bush3","Laura",NA,NA,"female","0","1946.0","false","1.0","0.0","0.0","A/A","D/d","+/+","2/1",NA
+"Bush3","Henry Hagar",NA,NA,"male","0","1978.0","false","1.0","0.0","0.0","A/A","d/D","+/+","1/1",NA
+"Bush3","Barbara","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/A","d/D","+/+","1/1",NA
+"Bush3","Jenna","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/A","d/D","+/+","1/1",NA
+"Bush3","Margaret","Jenna","Henry Hagar","female","0","2013.0","false",NA,NA,NA,"A/A","D/d","+/+","1/1",NA
+"Clinton3","Bill",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","A/A","D/d","+/+","2/2","1.88"
+"Clinton3","Hillary",NA,NA,"female","0","1947.0","true","1.0","0.0","0.0","A/A","d/d","-/-","1/1",NA
+"Clinton3","Chelsea","Hillary","Bill","female","0","1980.0","false",NA,NA,NA,"A/A","d/d","-/+","1/2",NA
+"Obama3","Barack",NA,NA,"male","0","1961.0","true","0.5","0.5","0.0","O/O","D/d","+/+","1/1","1.85"
+"Obama3","Michelle",NA,NA,"female","0","1964.0","false","0.3","0.7","0.0","O/B","D/D","+/-","2/2",NA
+"Obama3","Malia","Michelle","Barack","female","0","1998.0","false",NA,NA,NA,"O/O","D/d","+/+","2/1",NA
+"Obama3","Sasha","Michelle","Barack","female","0","2001.0","false",NA,NA,NA,"O/O","D/d","+/+","2/1",NA
+"Bush4","George",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","B/A","D/d","+/+","1/1","1.82"
+"Bush4","Laura",NA,NA,"female","0","1946.0","false","1.0","0.0","0.0","A/A","D/D","+/+","2/1",NA
+"Bush4","Henry Hagar",NA,NA,"male","0","1978.0","false","1.0","0.0","0.0","A/A","D/d","+/+","1/1",NA
+"Bush4","Barbara","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/B","D/D","+/+","1/1",NA
+"Bush4","Jenna","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/B","D/D","+/+","1/1",NA
+"Bush4","Margaret","Jenna","Henry Hagar","female","0","2013.0","false",NA,NA,NA,"A/A","D/D","+/+","1/1",NA
+"Clinton4","Bill",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","A/A","D/D","+/+","2/2","1.88"
+"Clinton4","Hillary",NA,NA,"female","0","1947.0","true","1.0","0.0","0.0","B/B","d/d","-/-","1/1",NA
+"Clinton4","Chelsea","Hillary","Bill","female","0","1980.0","false",NA,NA,NA,"B/A","d/D","-/+","1/2",NA
+"Obama4","Barack",NA,NA,"male","0","1961.0","true","0.5","0.5","0.0","O/O","D/D","-/-","1/1","1.85"
+"Obama4","Michelle",NA,NA,"female","0","1964.0","false","0.3","0.7","0.0","O/B","d/D","+/-","2/2",NA
+"Obama4","Malia","Michelle","Barack","female","0","1998.0","false",NA,NA,NA,"O/O","d/D","+/-","2/1",NA
+"Obama4","Sasha","Michelle","Barack","female","0","2001.0","false",NA,NA,NA,"B/O","D/D","-/-","2/1",NA
+"Bush5","George",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","B/A","d/D","+/+","1/1","1.82"
+"Bush5","Laura",NA,NA,"female","0","1946.0","false","1.0","0.0","0.0","A/A","D/D","+/+","1/2",NA
+"Bush5","Henry Hagar",NA,NA,"male","0","1978.0","false","1.0","0.0","0.0","A/A","D/D","+/+","1/1",NA
+"Bush5","Barbara","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/A","D/D","+/+","1/1",NA
+"Bush5","Jenna","Laura","George","female","1","1981.0","false",NA,NA,NA,"A/A","D/D","+/+","1/1",NA
+"Bush5","Margaret","Jenna","Henry Hagar","female","0","2013.0","false",NA,NA,NA,"A/A","D/D","+/+","1/1",NA
+"Clinton5","Bill",NA,NA,"male","0","1946.0","true","1.0","0.0","0.0","A/A","D/D","+/+","2/2","1.88"
+"Clinton5","Hillary",NA,NA,"female","0","1947.0","true","1.0","0.0","0.0","A/A","d/d","-/-","1/1",NA
+"Clinton5","Chelsea","Hillary","Bill","female","0","1980.0","false",NA,NA,NA,"A/A","d/D","-/+","1/2",NA
+"Obama5","Barack",NA,NA,"male","0","1961.0","true","0.5","0.5","0.0","O/O","D/d","+/+","1/1","1.85"
+"Obama5","Michelle",NA,NA,"female","0","1964.0","false","0.3","0.7","0.0","B/O","D/D","-/-","2/2",NA
+"Obama5","Malia","Michelle","Barack","female","0","1998.0","false",NA,NA,NA,"B/O","D/d","-/+","2/1",NA
+"Obama5","Sasha","Michelle","Barack","female","0","2001.0","false",NA,NA,NA,"O/O","D/d","-/+","2/1",NA

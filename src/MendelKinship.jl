@@ -11,6 +11,8 @@ module MendelKinship
 using MendelBase
 ##
 using SnpArrays
+using PlotlyJS
+using StatsBase
 ##
 #
 # Required external modules.
@@ -24,7 +26,7 @@ This is the wrapper function for the Kinship analysis option.
 """
 function Kinship(control_file = ""; args...)
 
-  const KINSHIP_VERSION :: VersionNumber = v"0.1.0"
+  const KINSHIP_VERSION :: VersionNumber = v"0.2.0"
   #
   # Print the logo. Store the initial directory.
   #
@@ -49,9 +51,9 @@ function Kinship(control_file = ""; args...)
   keyword["repetitions"] = 1
   keyword["xlinked_analysis"] = false
 ##
-  keyword["compare_kinships"] = true
+  keyword["compare_kinships"] = false
   keyword["maf_threshold"] = 0.01
-  keyword["grm_method"] = "GRM" # MoM alternative
+  keyword["grm_method"] = "MoM" # GRM alternative
   keyword["deviant_pairs"] = 0
 ##
   #
@@ -92,7 +94,12 @@ function Kinship(control_file = ""; args...)
     snpdata.personid == unique(snpdata.personid) || throw(ArgumentError("non-unique snp ids"))
     person.name == unique(person.name) || throw(ArgumentError("non-unique person names"))
 
+    # calculate empiric and theoretical kinship
     kinship_frame = compare_kinships(pedigree, person, snpdata, keyword)
+    
+    # append fisher's z-score to the kinship frame
+    z_score = compute_fishers_z(kinship_frame)
+    kinship_frame = [kinship_frame DataFrame(fishers_zscore = z_score)]
     return kinship_frame
   end
 ##
@@ -128,17 +135,17 @@ function compare_kinships(pedigree::Pedigree, person::Person,
   # a vector to hold kinship matrices, one for each pedigree
   #
   kinship = Vector{Matrix{Float64}}(pedigrees)
-  #
-  # Because open mendel will permute people, we undo the permutation here to match 
-  # up with GRM. GRM never permutes people.
-  #
+#
+# Copy is necessary because snpdata.personid points to the same array as person.name, and we 
+# need person.name to stay permuted to calculate theoretical kinship. In the construction of GRM, 
+# personid was never mutated. 
+#
+  snpid = copy(snpdata.personid)
+  ipermute!(snpid, person.inverse_permutation)
 #
 # Since people are reordered, compute identification maps.
 # i.e. Matches positions of ids in two strings of ids
-# 
-  # ipermute!(person.name, person.inverse_permutation)
-  snpid = deepcopy(snpdata.personid)
-  ipermute!(snpid, person.inverse_permutation) #permute snpid back to original person names
+#     
   name_to_id = indexin(person.name, snpid)
   id_to_name = indexin(snpid, person.name)
 #
@@ -146,10 +153,6 @@ function compare_kinships(pedigree::Pedigree, person::Person,
 #
   if keyword["grm_method"] == "GRM"
     GRM = grm(snpdata.snpmatrix, method=:GRM, maf_threshold=maf_threshold)
-    # snpmatrix_test = SnpArray(keyword["snpdata_file"], people = person.people,
-    #   snps = size(snp_definition_frame, 1))
-    # GRM_test = grm(snpmatrix_test, method=:GRM, maf_threshold=0.01)
-    # all(GRM_test .== GRM) is true, so the GRM matrix is doing what its supposed to do 
   else
     GRM = grm(snpdata.snpmatrix, method=:MoM)
   end
@@ -191,6 +194,7 @@ function compare_kinships(pedigree::Pedigree, person::Person,
   for k = 1:deviant_pairs
     (ii, jj) = (rowindex[k], columnindex[k]) #index of kth largest deviation
     (i, j) = (id_to_name[ii], id_to_name[jj]) #maps snp back to person name
+    if j > i; continue; end
     (pedi, pedj) = (person.pedigree[i], person.pedigree[j]) #the pedigree person belongs    
     if pedi == pedj
       q = pedigree.start[pedi] - 1
@@ -535,6 +539,67 @@ function identity_state(source1::Vector{Int}, source2::Vector{Int})
     return 1
   end
 end # function identity_state
+
+##
+function make_compare_plot(x::DataFrame)
+  # make name for each point
+  name = Array{String}(size(x, 1))
+  for i in 1:length(name)
+      name[i] = "Person1=" * x[i, 3] * ", " * "Person2=" * x[i, 4]
+  end
+  return linescatter(name)
+end
+
+function make_plot_name(x::DataFrame)
+  name = Array{String}(size(x, 1))
+  for i in 1:length(name)
+    name[i] = "Person1=" * x[i, 3] * ", " * "Person2=" * x[i, 4]
+  end
+end
+
+function make_compare_plot(x::DataFrame, name::Vector{String})
+  #make the plot using PlotlyJS because they give an interactive plot option
+  trace1 = scatter(;x=x[:theoretical_kinship], 
+    y=x[:empiric_kinship], mode="markers", 
+    name="empiric kinship", text=name)
+  
+  trace2 = scatter(;x=[1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 0.0],
+    y=[1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 0.0], 
+    mode="markers", name="marker for midpoint")
+      
+  layout = Layout(;title="Compare empiric vs theoretical kinship",
+    hovermode="closest", 
+    xaxis=attr(title="Theoretical kinship (θ)", 
+      showgrid=false, zeroline=false),
+    yaxis=attr(title="Empiric Kinship", zeroline=false))
+  
+  data = [trace1, trace2]
+  plot(data, layout)
+end
+
+function compute_fishers_z(x::DataFrame)
+  theoretical_transformed = copy(x[:theoretical_kinship])
+  theoretical_transformed = atanh.(theoretical_transformed)
+  empiric_transformed = copy(x[:empiric_kinship])
+  empiric_transformed = atanh.(empiric_transformed)
+
+  difference = theoretical_transformed - empiric_transformed
+  new_zscore = zscore(difference)
+  return sort(new_zscore, by = abs, rev = true)
+end
+
+function plot_fisher_z(x::DataFrame, name::Vector{String})
+    trace1 = histogram(x=new_zscore, text=name)
+    data = [trace1]
+    
+    layout = Layout(barmode="overlay", 
+        title="Z-score plot for Fisher's statistic",
+        xaxis=attr(title="Standard deviations"),
+        yaxis=attr(title="count"))
+    
+    plot(data, layout)
+end
+##
 
 end # module MendelKinship
 

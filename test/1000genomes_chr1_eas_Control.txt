@@ -1,0 +1,12 @@
+#
+# Input and Output files.
+#
+field_separator = 
+snpdata_file = 1000genomes_chr1_eas.bed
+snpdefinition_file = 1000genomes_chr1_eas.snp
+pedigree_file = 1000genomes_chr1_eas.ped
+#
+# Analysis parameters for Kinship option.
+#
+repetitions = 1000
+compare_kinships = true

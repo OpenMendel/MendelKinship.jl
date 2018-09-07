@@ -1,0 +1,13 @@
+#
+# Input and Output files.
+#
+field_separator = ,
+snpdata_file = SNP_data23a.bed
+snpdefinition_file = SNP_def23a.txt
+pedigree_file = Ped23a.in
+#
+# Analysis parameters for Kinship option.
+#
+#repetitions = 1000
+compare_kinships = true
+maf_threshold = 0.01
