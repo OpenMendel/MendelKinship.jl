@@ -47,14 +47,15 @@ function Kinship(control_file = ""; args...)
   # by setting their default values using the format:
   # keyword["some_keyword_name"] = default_value
   #
-  keyword["kinship_output_file"] = "Kinship_Output_File.txt"
   keyword["repetitions"] = 1
   keyword["xlinked_analysis"] = false
 ##
   keyword["compare_kinships"] = false
   keyword["maf_threshold"] = 0.01
-  keyword["grm_method"] = "MoM" # GRM alternative
+  keyword["grm_method"] = "MoM" # default to MoM since it's less sensitive to rare snps
   keyword["deviant_pairs"] = 0
+  keyword["kinship_plot"] = ""
+  keyword["z_score_plot"] = ""
 ##
   #
   # Process the run-time user-specified keywords that will control the analysis.
@@ -81,33 +82,40 @@ function Kinship(control_file = ""; args...)
   # Execute the specified analysis.
   #
   println(" \nAnalyzing the data.\n")
-  execution_error = false
 ##
-  if keyword["compare_kinships"] == false
-    coefficient_dataframe = kinship_option(pedigree, person, keyword)
-    show(coefficient_dataframe)
-  else
-    #
-    # don't run if there's no snp data. Don't run if snp id and/or person name is not unique
-    #
-    snpdata.snps != 0 || throw(ArgumentError("Need Snp data files to compare kinships"))
-    snpdata.personid == unique(snpdata.personid) || throw(ArgumentError("non-unique snp ids"))
-    person.name == unique(person.name) || throw(ArgumentError("non-unique person names"))
+  if keyword["compare_kinships"]
+    # Don't run if there's no snp data. Don't run if snp id and/or person name is not unique
+    @assert snpdata.snps != 0 "Need Snp data files to compare kinships"
+    @assert snpdata.personid == unique(snpdata.personid) "non-unique snp ids"
+    @assert person.name == unique(person.name) "non-unique person names"
 
-    # calculate empiric and theoretical kinship
+    # Calculate empiric and theoretical kinship and append fisher's z-score to the kinship frame
     kinship_frame = compare_kinships(pedigree, person, snpdata, keyword)
-    
-    # append fisher's z-score to the kinship frame
-    z_score = compute_fishers_z(kinship_frame)
-    kinship_frame = [kinship_frame DataFrame(fishers_zscore = z_score)]
-    return kinship_frame
-  end
-##
-  if execution_error
-    println(" \n \nERROR: Mendel terminated prematurely!\n")
+    kinship_frame = compute_fishers_z(kinship_frame)
+
+    # Create and save plots based on user's requests
+    name = make_plot_name(kinship_frame) 
+    if keyword["kinship_plot"] != "" 
+      my_compare_plot = make_compare_plot(kinship_frame, name)
+      PlotlyJS.savefig(my_compare_plot, keyword["kinship_plot"] * ".html")
+      println("Kinship plot saved.")
+    end
+    if keyword["z_score_plot"] != ""
+      my_fisher_plot = plot_fisher_z(kinship_frame, name)
+      PlotlyJS.savefig(my_fisher_plot, keyword["z_score_plot"] * ".html")
+      println("Fisher's transform plot saved.")
+    end
   else
-    println(" \n \nMendel's analysis is finished.\n")
+    kinship_frame = kinship_option(pedigree, person, keyword)
   end
+
+  #save table and print to REPL
+  writetable(keyword["output_file"], kinship_frame)
+  display(kinship_frame)
+
+  #if we made it this far then all analysis proceeded correctly
+  println(" \n \nMendel's analysis is finished.\n")
+##
   #
   # Finish up by closing, and thus flushing, any output files.
   # Return to the initial directory.
@@ -322,9 +330,8 @@ function kinship_option(pedigree::Pedigree, person::Person,
     delete!(combined_dataframe, [:ped1, :ped2, :ped3])
   end
   #
-  # Write the combined coefficient frame to a file and return.
+  # Combined coefficient frame to a file and return.
   #
-  writetable(keyword["kinship_output_file"], combined_dataframe)
   return combined_dataframe
 end # function kinship_option
 
@@ -541,20 +548,12 @@ function identity_state(source1::Vector{Int}, source2::Vector{Int})
 end # function identity_state
 
 ##
-function make_compare_plot(x::DataFrame)
-  # make name for each point
-  name = Array{String}(size(x, 1))
-  for i in 1:length(name)
-      name[i] = "Person1=" * x[i, 3] * ", " * "Person2=" * x[i, 4]
-  end
-  return linescatter(name)
-end
-
 function make_plot_name(x::DataFrame)
   name = Array{String}(size(x, 1))
   for i in 1:length(name)
     name[i] = "Person1=" * x[i, 3] * ", " * "Person2=" * x[i, 4]
   end
+  return name
 end
 
 function make_compare_plot(x::DataFrame, name::Vector{String})
@@ -578,18 +577,16 @@ function make_compare_plot(x::DataFrame, name::Vector{String})
 end
 
 function compute_fishers_z(x::DataFrame)
-  theoretical_transformed = copy(x[:theoretical_kinship])
-  theoretical_transformed = atanh.(theoretical_transformed)
-  empiric_transformed = copy(x[:empiric_kinship])
-  empiric_transformed = atanh.(empiric_transformed)
+  theoretical_transformed = map(atanh, x[:theoretical_kinship])
+  empiric_transformed = map(atanh, x[:empiric_kinship])
+  difference = empiric_transformed - theoretical_transformed
+  new_zscore = zscore(difference) #in StatsBase package
 
-  difference = theoretical_transformed - empiric_transformed
-  new_zscore = zscore(difference)
-  return sort(new_zscore, by = abs, rev = true)
+  return [x DataFrame(fishers_zscore = new_zscore)]
 end
 
 function plot_fisher_z(x::DataFrame, name::Vector{String})
-    trace1 = histogram(x=new_zscore, text=name)
+    trace1 = histogram(x=x[:fishers_zscore], text=name)
     data = [trace1]
     
     layout = Layout(barmode="overlay", 
