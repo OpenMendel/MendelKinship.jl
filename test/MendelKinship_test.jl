@@ -7,6 +7,7 @@ srand(123)
 @testset "kinship_matrix" begin
     keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
     keyword["kinship_output_file"] = "Kinship_Output_File.txt"
+    keyword["compare_kinships"] = false
     process_keywords!(keyword, "kinship_Control.txt", "")
     (pedigree, person, nuclear_family, locus, snpdata,
     locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
@@ -103,6 +104,7 @@ end
 @testset "delta7_matrix" begin
     keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
     keyword["kinship_output_file"] = "Kinship_Output_File.txt"
+    keyword["compare_kinships"] = false
     process_keywords!(keyword, "kinship_Control.txt", "")
     (pedigree, person, nuclear_family, locus, snpdata,
     locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
@@ -205,6 +207,7 @@ end # function kinship_matrix_notwin
 @testset "cotwin_extension!" begin
     keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
     keyword["kinship_output_file"] = "Kinship_Output_File.txt"
+    keyword["compare_kinships"] = false
     process_keywords!(keyword, "kinship_Control.txt", "")
     (pedigree, person, nuclear_family, locus, snpdata,
     locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
@@ -238,6 +241,7 @@ end
 @testset "jacquard_coefficients" begin
     keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
     keyword["kinship_output_file"] = "Kinship_Output_File.txt"
+    keyword["compare_kinships"] = false
     process_keywords!(keyword, "kinship_Control.txt", "")
     (pedigree, person, nuclear_family, locus, snpdata,
     locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
@@ -272,6 +276,7 @@ end
     keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
     keyword["kinship_output_file"] = "Kinship_Output_File.txt"
     keyword["xlinked_analysis"] = false
+    keyword["compare_kinships"] = false
     process_keywords!(keyword, "kinship_Control.txt", "")
     (pedigree, person, nuclear_family, locus, snpdata,
     locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =

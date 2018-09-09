@@ -8,4 +8,4 @@ output_file = kinship_Output.txt
 # Analysis parameters for Kinship option.
 #
 repetitions = 1000
-compare_kinships = true
+compare_kinships = false

@@ -49,6 +49,7 @@ function Kinship(control_file = ""; args...)
   #
   keyword["repetitions"] = 1
   keyword["xlinked_analysis"] = false
+  keyword["kinship_output_file"] = "kinship_file_output.txt"
 ##
   keyword["compare_kinships"] = false
   keyword["maf_threshold"] = 0.01
@@ -103,14 +104,14 @@ function Kinship(control_file = ""; args...)
     if keyword["z_score_plot"] != ""
       my_fisher_plot = plot_fisher_z(kinship_frame, name)
       PlotlyJS.savefig(my_fisher_plot, keyword["z_score_plot"] * ".html")
-      println("Fisher's transform plot saved.")
+      println("Fisher's plot saved.")
     end
   else
     kinship_frame = kinship_option(pedigree, person, keyword)
   end
 
   #save table and print to REPL
-  writetable(keyword["output_file"], kinship_frame)
+  writetable(keyword["kinship_output_file"], kinship_frame)
   display(kinship_frame)
 
   #if we made it this far then all analysis proceeded correctly
