@@ -9,10 +9,12 @@ module MendelKinship
 # Required OpenMendel packages and modules.
 #
 using MendelBase
-# using DataStructures                  # Now in MendelBase.
+using SnpArrays
 #
 # Required external modules.
 #
+using PlotlyJS
+using StatsBase
 using DataFrames                        # From package DataFrames.
 
 export Kinship
@@ -21,11 +23,11 @@ export Kinship
 This is the wrapper function for the Kinship analysis option.
 """
 function Kinship(control_file = ""; args...)
-
-  const KINSHIP_VERSION :: VersionNumber = v"0.1.0"
-  #
-  # Print the logo. Store the initial directory.
-  #
+#
+  const KINSHIP_VERSION :: VersionNumber = v"0.2.0"
+#
+# Print the logo. Store the initial directory.
+#
   print(" \n \n")
   println("     Welcome to OpenMendel's")
   println("     Kinship analysis option")
@@ -33,27 +35,33 @@ function Kinship(control_file = ""; args...)
   print(" \n \n")
   println("Reading the data.\n")
   initial_directory = pwd()
-  #
-  # The user specifies the analysis to perform via a set of keywords.
-  # Start the keywords at their default values.
-  #
+#
+# The user specifies the analysis option via a set of keywords.
+# Start the keywords at their default values.
+#
   keyword = set_keyword_defaults!(Dict{AbstractString, Any}())
-  #
-  # Keywords unique to this analysis should be first defined here
-  # by setting their default values using the format:
-  # keyword["some_keyword_name"] = default_value
-  #
-  keyword["kinship_output_file"] = "Kinship_Output_File.txt"
+#
+# Keywords unique to this analysis should be first defined here.
+# Set their default values using the format:
+# keyword["some_keyword_name"] = default_value
+#
   keyword["repetitions"] = 1
   keyword["xlinked_analysis"] = false
-  #
-  # Process the run-time user-specified keywords that will control the analysis.
-  # This will also initialize the random number generator.
-  #
+  keyword["kinship_output_file"] = "kinship_file_output.txt"
+  keyword["compare_kinships"] = false
+  keyword["maf_threshold"] = 0.01
+  keyword["grm_method"] = "MoM" # MoM is less sensitive to rare snps
+  keyword["deviant_pairs"] = 0
+  keyword["kinship_plot"] = ""
+  keyword["z_score_plot"] = ""
+#
+# Process the run-time user-specified keywords that will control the 
+# analysis. This will also initialize the random number generator.
+#
   process_keywords!(keyword, control_file, args)
-  #
-  # Check that the correct analysis option was specified.
-  #
+#
+# Check that the correct analysis option was specified.
+#
   lc_analysis_option = lowercase(keyword["analysis_option"])
   if (lc_analysis_option != "" &&
       lc_analysis_option != "kinship")
@@ -61,32 +69,154 @@ function Kinship(control_file = ""; args...)
        "An incorrect analysis option was specified.\n \n"))
   end
   keyword["analysis_option"] = "Kinship"
-  #
-  # Read the genetic data from the external files named in the keywords.
-  #
-  (pedigree, person, nuclear_family, locus, snpdata,
-    locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
+#
+# Read the genetic data from the external files named in the keywords.
+#
+  (pedigree, person, nuclear_family, locus, snpdata, locus_frame, 
+    phenotype_frame, pedigree_frame, snp_definition_frame) =
     read_external_data_files(keyword)
-  #
-  # Execute the specified analysis.
-  #
+#
+# Execute the specified analysis.
+#
   println(" \nAnalyzing the data.\n")
-  execution_error = false
-  coefficient_frame = kinship_option(pedigree, person, keyword)
-  show(coefficient_frame)
-  if execution_error
-    println(" \n \nERROR: Mendel terminated prematurely!\n")
+  if keyword["compare_kinships"]
+    @assert snpdata.snps != 0 "Need Snp data to compare kinships"
+    @assert snpdata.snps == length(unique(snpdata.snpid)) "non-unique snp ids"
+    @assert person.people == length(unique(person.name)) "non-unique person names"
+#
+# Find each person's order on data entry before MendelBase permutes them.
+# 
+    entryorder = convert(Vector{Int64}, pedigree_frame[:EntryOrder])
+#
+# Calculate empiric and theoretical kinships and append fisher's z-scores 
+# of these to the kinship frame.
+#
+    kinship_frame = compare_kinships(pedigree, person, snpdata, keyword, entryorder)
+    kinship_frame = compute_fishers_z(kinship_frame)
+#
+# Create and save plots based on user's requests.
+#
+    name = make_plot_name(kinship_frame) 
+    if keyword["kinship_plot"] != "" 
+      my_compare_plot = make_compare_plot(kinship_frame, name)
+      PlotlyJS.savefig(my_compare_plot, keyword["kinship_plot"] * ".html")
+      println("Kinship plot saved.")
+    end
+    if keyword["z_score_plot"] != ""
+      my_fisher_plot = plot_fisher_z(kinship_frame, name)
+      PlotlyJS.savefig(my_fisher_plot, keyword["z_score_plot"] * ".html")
+      println("Fisher's plot saved.")
+    end
   else
-    println(" \n \nMendel's analysis is finished.\n")
+#
+# Otherwise, simply compute theoretical coefficients.
+#
+    kinship_frame = kinship_option(pedigree, person, keyword)
   end
-  #
-  # Finish up by closing, and thus flushing, any output files.
-  # Return to the initial directory.
-  #
+#
+# Save the kinship frame and write it to the designated file and REPL.
+#
+  writetable(keyword["kinship_output_file"], kinship_frame)
+  display(kinship_frame)
+#
+# Finish up by closing, and thus flushing, the output file.
+# Return to the initial directory.
+#
+  println(" \n \nMendel's analysis is finished.\n")
   close(keyword["output_unit"])
   cd(initial_directory)
   return nothing
 end # function Kinship
+
+"""Compares theoretical and empirical kinship coefficients."""
+
+function compare_kinships(pedigree::Pedigree, person::Person,
+  snpdata::SnpData, keyword::Dict{AbstractString, Any}, entryorder::Vector{Int})
+#
+  people = person.people
+  pedigrees = pedigree.pedigrees
+  xlinked = keyword["xlinked_analysis"]
+  maf_threshold = keyword["maf_threshold"]
+  deviant_pairs = keyword["deviant_pairs"]
+  if deviant_pairs == 0
+    deviant_pairs = people^2
+  end
+#
+# Create a vector of kinship matrices, one for each pedigree.
+#
+  kinship = Vector{Matrix{Float64}}(pedigrees)
+#
+# Create a copy of snpdata.personid that orders people similarly to person.name.
+# People are permuted so the parents come before children. This facilitates
+# computation of theoretical kinships. In SnpArrays people are not permuted.
+#
+  snpid = copy(snpdata.personid)
+  ipermute!(snpid, entryorder)
+#
+# Since people are reordered, compute identification maps to match
+# positions of ids in two vectors of ids.
+#     
+  name_to_id = indexin(person.name, snpid)
+  id_to_name = indexin(snpid, person.name)
+#
+# Compute and transform the genetic relationship matrix.
+#
+  if keyword["grm_method"] == "GRM"
+    GRM = grm(snpdata.snpmatrix, method=:GRM, maf_threshold=maf_threshold)
+  else
+    GRM = grm(snpdata.snpmatrix, method=:MoM)
+  end
+  clamp!(GRM, -0.99999, 0.99999) 
+  map!(x -> atanh(x), GRM, GRM) #fisher's transformation
+#
+# Loop over all pedigrees.
+#
+  for ped = 1:pedigrees
+#
+# Compute theoretical coefficients and adjust the GRM matrix.
+#
+    kinship[ped] = kinship_matrix(pedigree, person, ped, xlinked)
+    q = pedigree.start[ped] - 1
+    for j = 1:pedigree.individuals[ped]
+      jj = name_to_id[j + q]
+      if jj == 0; continue; end
+      for i = j:pedigree.individuals[ped]
+        ii = name_to_id[i + q]
+        if ii == 0; continue; end
+        GRM[ii, jj] = GRM[ii, jj] - atanh(kinship[ped][i, j])
+        GRM[jj, ii] = GRM[ii, jj]
+      end
+    end
+  end
+#
+# Find the indices of the most deviant pairs.
+#
+  p = selectperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
+  (rowindex, columnindex) = ind2sub((people, people), p)
+#
+# Enter the most deviant pairs in a data frame.
+#
+  kinship_frame = DataFrame(Pedigree1 = String[], Pedigree2 = String[], 
+    Person1 = String[], Person2 = String[], theoretical_kinship= Float64[], 
+    empiric_kinship=Float64[])
+  r = 0.0
+  for k = 1:deviant_pairs
+    (ii, jj) = (rowindex[k], columnindex[k]) # index of kth largest deviation
+    (i, j) = (id_to_name[ii], id_to_name[jj]) # maps snpid back to person name
+    if j > i; continue; end
+    (pedi, pedj) = (person.pedigree[i], person.pedigree[j]) # pedigrees of i and j    
+    if pedi == pedj
+      q = pedigree.start[pedi] - 1
+      r = GRM[ii, jj] + atanh(kinship[pedi][i - q, j - q]) 
+      push!(kinship_frame, [pedigree.name[pedi], pedigree.name[pedj], person.name[i], 
+        person.name[j], kinship[pedi][i - q, j - q], tanh(r)])     
+    else
+      push!(kinship_frame, [pedigree.name[pedi], pedigree.name[pedj], person.name[i], 
+        person.name[j], 0.0, tanh(GRM[ii, jj])])
+    end
+  end
+  return kinship_frame
+end
 
 """
 This function orchestrates the computation via gene dropping
@@ -153,7 +283,7 @@ function kinship_option(pedigree::Pedigree, person::Person,
   end
   #
   # Join the separate dataframes, and sort the combined dataframe so
-  # that relative pairs are lumped by pedigree..
+  # that relative pairs are lumped by pedigree.
   #
   if xlinked
     combined_dataframe = join(kinship_dataframe, coefficient_dataframe,
@@ -169,9 +299,8 @@ function kinship_option(pedigree::Pedigree, person::Person,
     delete!(combined_dataframe, [:ped1, :ped2, :ped3])
   end
   #
-  # Write the combined coefficient frame to a file and return.
+  # Combined coefficient frame to a file and return.
   #
-  writetable(keyword["kinship_output_file"], combined_dataframe)
   return combined_dataframe
 end # function kinship_option
 
@@ -386,6 +515,62 @@ function identity_state(source1::Vector{Int}, source2::Vector{Int})
     return 1
   end
 end # function identity_state
+
+"""Assembles names for printing."""
+
+function make_plot_name(x::DataFrame)
+  name = Array{String}(size(x, 1))
+  for i in 1:length(name)
+    name[i] = "Person1=" * x[i, 3] * ", " * "Person2=" * x[i, 4]
+  end
+  return name
+end
+
+"""Composes the comparison plot using PlotlyJS."""
+
+function make_compare_plot(x::DataFrame, name::Vector{String})
+  trace1 = scatter(;x=x[:theoretical_kinship], 
+    y=x[:empiric_kinship], mode="markers", 
+    name="empiric kinship", text=name)
+#  
+  trace2 = scatter(;x=[1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 0.0],
+    y=[1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 0.0], 
+    mode="markers", name="marker for midpoint")
+#      
+  layout = Layout(;title="Compare empiric vs theoretical kinship",
+    hovermode="closest", 
+    xaxis=attr(title="Theoretical kinship", 
+      showgrid=false, zeroline=false),
+    yaxis=attr(title="Empiric Kinship", zeroline=false))
+#  
+  data = [trace1, trace2]
+  plot(data, layout)
+end
+
+"""Computes Fisher's atanh transform and standardizes it."""
+
+function compute_fishers_z(x::DataFrame)
+  theoretical_transformed = map(atanh, x[:theoretical_kinship])
+  empiric_transformed = map(atanh, x[:empiric_kinship])
+  difference = empiric_transformed - theoretical_transformed
+  new_zscore = zscore(difference) #in StatsBase package
+  return [x DataFrame(fishers_zscore = new_zscore)]
+end
+
+"""Plot the transformed data."""
+
+function plot_fisher_z(x::DataFrame, name::Vector{String})
+    trace1 = histogram(x=x[:fishers_zscore], text=name)
+    data = [trace1]
+#    
+    layout = Layout(barmode="overlay", 
+        title="Z-score plot for Fisher's statistic",
+        xaxis=attr(title="Standard deviations"),
+        yaxis=attr(title="count"))
+#    
+    plot(data, layout)
+end
+##
 
 end # module MendelKinship
 

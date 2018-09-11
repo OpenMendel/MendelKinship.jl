@@ -1,0 +1,63 @@
+
+                       WELCOME TO MENDEL, VERSION 16.0
+ 
+                   (c) COPYRIGHT KENNETH LANGE, 1985-2016
+                       ALL COMMERCIAL RIGHTS RESERVED
+                   PROGRAMMED BY KENNETH LANGE & ERIC SOBEL
+ 
+              DOCUMENTATION AND MOST RECENT VERSION AVAILABLE AT
+                 http://www.genetics.ucla.edu/software/mendel
+
+
+ TIME OF DAY   : 14:37
+ MONTH/DAY/YEAR: 07/06/2018
+
+ CONTENT OF CONTROL FILE Control10c.in:
+ 
+ DEFINITION_FILE = Def10c.in
+ PEDIGREE_FILE = 10c_genedropped_pedframe.txt
+ OUTPUT_FILE = Mendel10c.out
+ SUMMARY_FILE = Summary10c.out
+ NEW_DEFINITION_FILE = Def10c.out
+ NEW_MAP_FILE = Map10c.out
+ NEW_PEDIGREE_FILE = Ped10c.out
+ NEW_SNP_DEFINITION_FILE = SNP_def10c.out
+ NEW_SNP_DATA_FILE = SNP_data10c_out.bin
+ NEW_SNP_PHASE_FILE = SNP_phase10c_out.bin
+ INPUT_FORMAT = No_Twins
+ ANALYSIS_OPTION = File_Conversion
+ MODEL = 2
+
+
+ TOTALS:    PEDIGREES  FAMILIES  PEOPLE  FEMALES   MALES   MZTWINS  FOUNDERS
+                 27       57      212       97      115        0       85
+ 
+ INITIALIZATION RUN TIME  :  1.509 SECONDS
+
+        MENDEL DATA INITIALIZATION COMPLETED.
+
+ *********************************************************************
+ 
+ ANALYSIS OF INPUT DATA: 
+
+                      INPUT FILE CONVERSION OPTION
+
+                      CONVERT TO BINARY SNP FILES
+
+ CHECK THE FILE Summary10c.out FOR A SUMMARY OF ANALYSIS RESULTS,
+ AND FOR CITATIONS TO USE IN PUBLICATIONS.
+
+ THE FILE Def10c.out IS YOUR NEW DEFINITION FILE.
+
+ THE FILE Ped10c.out IS YOUR NEW PEDIGREE FILE.
+
+ THE FILE SNP_def10c.out IS YOUR NEW SNP DEFINITION FILE.
+
+ THE FILE SNP_data10c_out.bin IS YOUR NEW SNP DATA FILE.
+
+ TIME OF DAY   : 14:37
+ MONTH/DAY/YEAR: 07/06/2018
+ 
+ ANALYSIS RUN TIME  :  0.003 SECONDS
+
+        MENDEL DATA ANALYSIS COMPLETED.
