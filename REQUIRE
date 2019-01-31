@@ -1,5 +1,8 @@
-julia 0.5 0.7-
+julia 0.7
 
+CSV
+SnpArrays
+PlotlyJS
+StatsBase
 DataFrames
-
-MendelBase
+CSV
