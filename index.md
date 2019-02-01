@@ -1,20 +1,20 @@
 ### Overview
-Mendel Kinship is a component of the umbrella [OpenMendel](https://openmendel.github.io) project. Kinship coefficients quantify the degree of relationship between two relatives. Mendel Kinship computes global kinship coefficients and local kinship coefficients. (Global kinship coefficients are also known as theoretical; local are also known as empirical or conditional.) A global kinship coefficient between two individuals *i* and *j* is the probability that a randomly sampled gene from *i* is identical by descent to a randomly sampled gene from the same arbitrary locus of *j*.
+Mendel Kinship is a component of the umbrella [OpenMendel](https://openmendel.github.io) project. Kinship coefficients quantify the degree of relationship between two relatives. Mendel Kinship computes global kinship coefficients and local kinship coefficients. (Global kinship coefficients are also known as theoretical; local are also known as empirical or conditional.) A global kinship coefficient between two individuals *i* and *j* is the probability that at an arbitrary locus a randomly sampled gene from *i* is identical by descent to a randomly sampled gene from *j*.
 
 ### Appropriate Problems and Data Sets
 Global kinship coefficients based solely on pedigree structure can be quickly computed on pedigrees of all sizes, since marker data are ignored. For any local or SNP-based kinship analysis, avoid mixing autosomal and X-linked loci. Both sets of loci can be analyzed, but they must be run separately. For standard, text-based input files, local kinship analyses will be likelihood-based. For such analyses, including comparing the local to global kinship coefficients, large pedigrees will be bypassed. For binary data files, the SNP-based global and local methods will be used.
 
 ### Installation
-*Note: The three OpenMendel packages (1) [SnpArrays](https://openmendel.github.io/SnpArrays.jl/latest/), (2) [Search](https://openmendel.github.io/Search.jl), and (3) [MendelBase](https://openmendel.github.io/MendelBase.jl) must be installed before any other OpenMendel package will run. It is easiest if these three packages are installed in the above order and before any other OpenMendel package.*
+*Note: The three OpenMendel packages (1) [SnpArrays](https://openmendel.github.io/SnpArrays.jl/latest/), (2) [MendelSearch](https://openmendel.github.io/MendelSearch.jl), and (3) [MendelBase](https://openmendel.github.io/MendelBase.jl) must be installed before any other OpenMendel package will run. It is easiest if these three packages are installed in the above order and before any other OpenMendel package.*
 
 Within Julia, use the package manager to install MendelKinship:
 
-    Pkg.clone("https://github.com/OpenMendel/MendelKinship.jl.git")
+    pkg> add https://github.com/OpenMendel/MendelKinship.jl.git
 
-This package supports Julia v0.4 and v0.5.
+This package supports Julia v1.0+
 
 ### Input Files
-The Mendel Kinship analysis package uses the following input files. Example input files can be found in the [docs](https://github.com/OpenMendel/MendelKinship.jl/tree/master/docs) subfolder of the Mendel Kinship project. (An analysis won't always need every file type below.)
+The Mendel Kinship analysis package uses the following input files. Example input files can be found in the [data](https://github.com/OpenMendel/MendelKinship.jl/tree/master/data) subfolder of the Mendel Kinship project. (An analysis won't always need every file type below.)
 
 * [Control File](#control-file): Specifies the names of your data input and output files and any optional parameters (*keywords*) for the analysis. (For a list of common keywords, see [Keywords Table](https://openmendel.github.io/MendelBase.jl/#keywords-table)).
 * [Locus File](https://openmendel.github.io/MendelBase.jl/#locus-file): Names and describes the genetic loci in your data.
@@ -57,7 +57,7 @@ xlinked_analysis  |  FALSE  |  TRUE, FALSE  |  Whether or not markers are on the
 
 
 ### Data Files
-Kinship requires a [Control file](https://openmendel.github.io/MendelBase.jl/#control-file), and a [Pedigree file](https://openmendel.github.io/MendelBase.jl/#pedigree-file). Genotype data can be included in the Pedigree file, in which case a [Locus file](https://openmendel.github.io/MendelBase.jl/#locus-file) is required. Alternatively, genotype data can be provided in a [SNP data file](https://openmendel.github.io/MendelBase.jl/#snp-data-file), in which case a [SNP Definition File](https://openmendel.github.io/MendelBase.jl/#snp-definition-file) is required. OpenMendel will also accept [PLINK format](http://zzz.bwh.harvard.edu/plink) FAM and BIM files. Details on the format and contents of the Control and data files can be found on the [MendelBase](https://openmendel.github.io/MendelBase.jl) documentation page. There are example data files in the Kinship [docs](https://github.com/OpenMendel/MendelKinship.jl/tree/master/docs) folder.
+Kinship requires a [Control file](https://openmendel.github.io/MendelBase.jl/#control-file), and a [Pedigree file](https://openmendel.github.io/MendelBase.jl/#pedigree-file). Genotype data can be included in the Pedigree file, in which case a [Locus file](https://openmendel.github.io/MendelBase.jl/#locus-file) is required. Alternatively, genotype data can be provided in a [SNP data file](https://openmendel.github.io/MendelBase.jl/#snp-data-file), in which case a [SNP Definition File](https://openmendel.github.io/MendelBase.jl/#snp-definition-file) is required. OpenMendel will also accept [PLINK format](http://zzz.bwh.harvard.edu/plink) FAM and BIM files. Details on the format and contents of the Control and data files can be found on the [MendelBase](https://openmendel.github.io/MendelBase.jl) documentation page. There are example data files in the Kinship [data](https://github.com/OpenMendel/MendelKinship.jl/tree/master/data) folder.
 
 ### Running the Analysis
 
