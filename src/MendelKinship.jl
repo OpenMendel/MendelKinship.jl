@@ -25,7 +25,7 @@ This is the wrapper function for the Kinship analysis option.
 """
 function Kinship(control_file = ""; args...)
 
-  KINSHIP_VERSION :: VersionNumber = v"0.1.0"
+  KINSHIP_VERSION :: VersionNumber = v"0.5.0"
   #
   # Print the logo. Store the initial directory.
   #
