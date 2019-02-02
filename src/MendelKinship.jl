@@ -1,3 +1,5 @@
+__precompile__()
+
 """
 This module implements computation of kinship and other identity coefficients.
 The kinship matrix is computed recursively by the standard formula.
@@ -9,11 +11,12 @@ module MendelKinship
 # Required OpenMendel packages and modules.
 #
 using MendelBase
-# using DataStructures                  # Now in MendelBase.
+# namely: DataStructures
 #
 # Required external modules.
 #
-using DataFrames                        # From package DataFrames.
+using CSV
+using DataFrames
 
 export Kinship
 
@@ -22,7 +25,7 @@ This is the wrapper function for the Kinship analysis option.
 """
 function Kinship(control_file = ""; args...)
 
-  const KINSHIP_VERSION :: VersionNumber = v"0.1.0"
+  KINSHIP_VERSION :: VersionNumber = v"0.1.0"
   #
   # Print the logo. Store the initial directory.
   #
@@ -43,7 +46,7 @@ function Kinship(control_file = ""; args...)
   # by setting their default values using the format:
   # keyword["some_keyword_name"] = default_value
   #
-  keyword["kinship_output_file"] = "Kinship_Output_File.txt"
+  keyword["kinship_output_table"] = "Kinship_Output_Table.txt"
   keyword["repetitions"] = 1
   keyword["xlinked_analysis"] = false
   #
@@ -158,20 +161,23 @@ function kinship_option(pedigree::Pedigree, person::Person,
   if xlinked
     combined_dataframe = join(kinship_dataframe, coefficient_dataframe,
       on = [:Pedigree, :Person1, :Person2])
-    sort!(combined_dataframe, cols = [:ped1, :Person1, :Person2])
-    delete!(combined_dataframe, [:ped1, :ped3])
+    sort!(combined_dataframe, [:ped1, :Person1, :Person2])
+    deletecols!(combined_dataframe, [:ped1, :ped3])
   else
     temp_dataframe = join(kinship_dataframe, delta_dataframe,
       on = [:Pedigree, :Person1, :Person2])
     combined_dataframe = join(temp_dataframe, coefficient_dataframe,
       on = [:Pedigree, :Person1, :Person2])
-    sort!(combined_dataframe, cols = [:ped1, :Person1, :Person2])
-    delete!(combined_dataframe, [:ped1, :ped2, :ped3])
+    sort!(combined_dataframe, [:ped1, :Person1, :Person2])
+    deletecols!(combined_dataframe, [:ped1, :ped2, :ped3])
   end
   #
   # Write the combined coefficient frame to a file and return.
   #
-  writetable(keyword["kinship_output_file"], combined_dataframe)
+  kinship_table_file = string(keyword["kinship_output_table"])
+  CSV.write(kinship_table_file, combined_dataframe;
+    writeheader = true, delim = keyword["output_field_separator"],
+    missingstring = keyword["output_missing_value"])
   return combined_dataframe
 end # function kinship_option
 
@@ -357,7 +363,7 @@ unique genes among the 4 sampled genes.
 """
 function identity_state(source1::Vector{Int}, source2::Vector{Int})
 
-  n = length(union(IntSet(source1), IntSet(source2)))
+  n = length(union(BitSet(source1), BitSet(source2)))
   if n == 4
     return 9
   elseif n == 3
@@ -386,6 +392,12 @@ function identity_state(source1::Vector{Int}, source2::Vector{Int})
     return 1
   end
 end # function identity_state
+#
+# Method to obtain path to this package's data files
+# so they can be used in the documentation and testing routines.
+# For example, datadir("Control file.txt") will return
+# "/path/to/package/data/Control file.txt"
+#
+datadir(parts...) = joinpath(@__DIR__, "..", "data", parts...)
 
 end # module MendelKinship
-

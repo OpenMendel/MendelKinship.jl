@@ -1,0 +1,21 @@
+name = "MendelKinship"
+desc = "Kinship calculations; part of the OpenMendel project."
+uuid = "82a28c69-7afd-556c-aa99-b3efd3c23126"
+version = "0.5.0"
+license = "MIT"
+authors = ["Kenneth Lange", "Eric Sobel"]
+keywords = ["OpenMendel", "kinship"]
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+MendelBase = "4fb2d825-8540-5432-a3a3-b9ff66df2cb5"
+
+[compat]
+julia = "1.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
