@@ -3,7 +3,7 @@ This is the wrapper function for the Kinship analysis option.
 """
 function Kinship(control_file = ""; args...)
 #
-  const KINSHIP_VERSION :: VersionNumber = v"0.2.0"
+  KINSHIP_VERSION :: VersionNumber = v"0.2.0"
 #
 # Print the logo. Store the initial directory.
 #
@@ -109,7 +109,7 @@ end # function Kinship
 
 """Compares theoretical and empirical kinship coefficients."""
 function compare_kinships(pedigree::Pedigree, person::Person,
-  snpdata::SnpData, keyword::Dict{AbstractString, Any}, entryorder::Vector{Int})
+  snpdata::SnpDataStruct, keyword::Dict{AbstractString, Any}, entryorder::Vector{Int})
 #
   people = person.people
   pedigrees = pedigree.pedigrees
@@ -122,14 +122,14 @@ function compare_kinships(pedigree::Pedigree, person::Person,
 #
 # Create a vector of kinship matrices, one for each pedigree.
 #
-  kinship = Vector{Matrix{Float64}}(pedigrees)
+  kinship = Vector{Matrix{Float64}}(undef, pedigrees)
 #
 # Create a copy of snpdata.personid that orders people similarly to person.name.
 # After ipermute!, personid_in_snpdate stores the personid's order as the pedigree
 # file originally stored it as. 
 #
   personid_in_snpdata = copy(snpdata.personid)
-  ipermute!(personid_in_snpdata, entryorder) 
+  invpermute!(personid_in_snpdata, entryorder) 
 #
 # Since people are reordered (so parents before children...etc), compute identification 
 # maps to match positions of ids in two vectors of ids.
@@ -188,8 +188,11 @@ function compare_kinships(pedigree::Pedigree, person::Person,
 #
 # Find the indices of the most deviant pairs.
 #
-  p = selectperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
-  (rowindex, columnindex) = ind2sub((people, people), p)
+  p = partialsortperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
+  (rowindex, columnindex) = Tuple(CartesianIndices((people, people))[p])
+
+  # p = selectperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
+  # (rowindex, columnindex) = ind2sub((people, people), p)
 #
 # Enter the most deviant pairs in a data frame.
 #
@@ -282,15 +285,15 @@ function kinship_option(pedigree::Pedigree, person::Person,
   if xlinked
     combined_dataframe = join(kinship_dataframe, coefficient_dataframe,
       on = [:Pedigree, :Person1, :Person2])
-    sort!(combined_dataframe, cols = [:ped1, :Person1, :Person2])
-    delete!(combined_dataframe, [:ped1, :ped3])
+    sort!(combined_dataframe, [:ped1, :Person1, :Person2])
+    deletecols!(combined_dataframe, [:ped1, :ped3])
   else
     temp_dataframe = join(kinship_dataframe, delta_dataframe,
       on = [:Pedigree, :Person1, :Person2])
     combined_dataframe = join(temp_dataframe, coefficient_dataframe,
       on = [:Pedigree, :Person1, :Person2])
-    sort!(combined_dataframe, cols = [:ped1, :Person1, :Person2])
-    delete!(combined_dataframe, [:ped1, :ped2, :ped3])
+    sort!(combined_dataframe, [:ped1, :Person1, :Person2])
+    deletecols!(combined_dataframe, [:ped1, :ped2, :ped3])
   end
   #
   # Combined coefficient frame to a file and return.
@@ -480,7 +483,7 @@ unique genes among the 4 sampled genes.
 """
 function identity_state(source1::Vector{Int}, source2::Vector{Int})
 
-  n = length(union(IntSet(source1), IntSet(source2)))
+  n = length(union(BitSet(source1), BitSet(source2)))
   if n == 4
     return 9
   elseif n == 3
