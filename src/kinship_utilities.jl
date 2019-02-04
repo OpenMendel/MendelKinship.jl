@@ -77,12 +77,12 @@ function Kinship(control_file = ""; args...)
     name = make_plot_name(kinship_frame) 
     if keyword["kinship_plot"] != "" 
       my_compare_plot = make_compare_plot(kinship_frame, name)
-      PlotlyJS.savefig(my_compare_plot, keyword["kinship_plot"] * ".html")
+      PlotlyBase.savefig(my_compare_plot, keyword["kinship_plot"] * ".pdf")
       println("Kinship plot saved.")
     end
     if keyword["z_score_plot"] != ""
       my_fisher_plot = plot_fisher_z(kinship_frame, name)
-      PlotlyJS.savefig(my_fisher_plot, keyword["z_score_plot"] * ".html")
+      PlotlyBase.savefig(my_fisher_plot, keyword["z_score_plot"] * ".pdf")
       println("Fisher's plot saved.")
     end
   else
@@ -189,8 +189,7 @@ function compare_kinships(pedigree::Pedigree, person::Person,
 # Find the indices of the most deviant pairs.
 #
   p = partialsortperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
-  (rowindex, columnindex) = Tuple(CartesianIndices((people, people))[p])
-
+  my_indices = CartesianIndices((people, people))[p]
   # p = selectperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
   # (rowindex, columnindex) = ind2sub((people, people), p)
 #
@@ -201,7 +200,7 @@ function compare_kinships(pedigree::Pedigree, person::Person,
     empiric_kinship=Float64[])
   r = 0.0
   for k = 1:deviant_pairs
-    (ii, jj) = (rowindex[k], columnindex[k]) # index of kth largest deviation
+    (ii, jj) = (my_indices[k][1], my_indices[k][2]) # index of kth largest deviation
     (i, j) = (id_to_name[ii], id_to_name[jj]) # maps snpid back to person name
     if j > i; continue; end
     (pedi, pedj) = (person.pedigree[i], person.pedigree[j]) # pedigrees of i and j    
@@ -515,7 +514,7 @@ end # function identity_state
 
 """Assembles names for printing."""
 function make_plot_name(x::DataFrame)
-  name = Array{String}(size(x, 1))
+  name = Array{String}(undef, size(x, 1))
   for i in 1:length(name)
     name[i] = "Person1=" * x[i, 3] * ", " * "Person2=" * x[i, 4]
   end
