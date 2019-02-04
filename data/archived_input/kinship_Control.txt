@@ -1,0 +1,10 @@
+#
+# Input and Output files.
+#
+pedigree_file = kinship_PedigreeFrame.txt
+kinship_output_table = kinship_Output_Table.txt
+output_file = kinship_Output.txt
+#
+# Analysis parameters for Kinship option.
+#
+repetitions = 1000
