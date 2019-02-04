@@ -29,7 +29,7 @@ function Kinship(control_file = ""; args...)
   keyword["kinship_output_file"] = "kinship_file_output.txt"
   keyword["compare_kinships"] = false
   keyword["maf_threshold"] = 0.01
-  keyword["grm_method"] = "MoM" # MoM is less sensitive to rare snps
+  keyword["grm_method"] = :MoM # Robust and MoM is less sensitive to rare snps
   keyword["deviant_pairs"] = 0
   keyword["kinship_plot"] = ""
   keyword["z_score_plot"] = ""
@@ -158,11 +158,8 @@ function compare_kinships(pedigree::Pedigree, person::Person,
 #
 # Compute and transform the genetic relationship matrix.
 #
-  if keyword["grm_method"] == "GRM"
-    GRM = grm(snpdata.snpmatrix, method=:GRM, maf_threshold=maf_threshold)
-  else
-    GRM = grm(snpdata.snpmatrix, method=:MoM)
-  end
+  method = keyword["grm_method"]
+  GRM = grm(snpdata.snpmatrix, method=method, minmaf=maf_threshold)
   clamp!(GRM, -0.99999, 0.99999) 
   map!(x -> atanh(x), GRM, GRM) #fisher's transformation
 #
