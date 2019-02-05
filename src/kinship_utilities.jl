@@ -77,12 +77,14 @@ function Kinship(control_file = ""; args...)
     name = make_plot_name(kinship_frame) 
     if keyword["kinship_plot"] != "" 
       my_compare_plot = make_compare_plot(kinship_frame, name)
-      PlotlyBase.savefig(my_compare_plot, keyword["kinship_plot"] * ".pdf")
+      # PlotlyBase.savefig(my_compare_plot, keyword["kinship_plot"] * ".pdf")
+      PlotlyJS.savehtml(my_compare_plot, keyword["kinship_plot"] * ".html")
       println("Kinship plot saved.")
     end
     if keyword["z_score_plot"] != ""
       my_fisher_plot = plot_fisher_z(kinship_frame, name)
-      PlotlyBase.savefig(my_fisher_plot, keyword["z_score_plot"] * ".pdf")
+      # PlotlyBase.savefig(my_fisher_plot, keyword["z_score_plot"] * ".pdf")
+      PlotlyJS.savehtml(my_fisher_plot, keyword["z_score_plot"] * ".html")
       println("Fisher's plot saved.")
     end
   else
