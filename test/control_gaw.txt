@@ -1,9 +1,0 @@
-#
-# Input and Output files.
-#
-plink_input_basename = merge-geno
-#
-# Analysis parameters for Kinship option.
-#
-compare_kinships = true
-maf_threshold = 0.01

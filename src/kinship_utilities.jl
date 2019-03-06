@@ -33,6 +33,7 @@ function Kinship(control_file = ""; args...)
   keyword["deviant_pairs"] = 0
   keyword["kinship_plot"] = ""
   keyword["z_score_plot"] = ""
+  keyword["full_pedigree_file"] = ""
 #
 # Process the run-time user-specified keywords that will control the 
 # analysis. This will also initialize the random number generator.
@@ -138,25 +139,28 @@ function compare_kinships(pedigree::Pedigree, person::Person,
 #
   name_to_id = indexin(person.name, personid_in_snpdata)
   id_to_name = indexin(personid_in_snpdata, person.name)
-          # #
-          # # If the full pedigree contains people without snp information, construct a separate
-          # # pedigree that holds only people with snp information. Keep track of which
-          # # person have SNP info in `contain_snp` (false = the person don't have snp info)
-          # #
-          #   contain_snp = falses(person.people)
-          #   if keyword["use_two_pedigree"]
-          #     snp_pedigree_df = read_plink_fam_file(keyword["pedigree_file"], keyword)
-          #     for i in 1:person.people
-          #       if personid_in_snpdata[i] in snp_pedigree_df[:Person]
-          #         contain_snp[i] = true
-          #       end
-          #     end
-          #   end
-          # #
-          # # Set people that have no snp to "0" in the permutation, so that they are 
-          # # skipped in the empiric kinship computation
-          # #
-          #   name_to_id[contain_snp .== 0] .= 0
+
+  println(name_to_id)
+  # (name_to_id, id_to_name) = correspond(person.name, snpdata.personid)
+  #
+  # If the full pedigree contains people without snp information, construct a separate
+  # pedigree that holds only people with snp information. Keep track of which
+  # person have SNP info in `contain_snp` (false = the person don't have snp info)
+  #
+    contain_snp = falses(person.people)
+    if keyword["use_two_pedigree"]
+      snp_pedigree_df = read_plink_fam_file(keyword["pedigree_file"], keyword)
+      for i in 1:person.people
+        if personid_in_snpdata[i] in snp_pedigree_df[:Person]
+          contain_snp[i] = true
+        end
+      end
+    end
+  #
+  # Set people that have no snp to "0" in the permutation, so that they are 
+  # skipped in the empiric kinship computation
+  #
+    name_to_id[contain_snp .== 0] .= 0
 #
 # Compute and transform the genetic relationship matrix.
 #
@@ -525,17 +529,15 @@ function make_compare_plot(x::DataFrame, name::Vector{String})
   trace1 = scatter(;x=x[:theoretical_kinship], 
     y=x[:empiric_kinship], mode="markers", 
     name="empiric kinship", text=name)
-#  
   trace2 = scatter(;x=[1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 0.0],
     y=[1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 0.0], 
     mode="markers", name="marker for midpoint")
-#      
   layout = Layout(;title="Compare empiric vs theoretical kinship",
     hovermode="closest", 
     xaxis=attr(title="Theoretical kinship", 
       showgrid=false, zeroline=false),
     yaxis=attr(title="Empiric Kinship", zeroline=false))
-#  
+
   data = [trace1, trace2]
   plot(data, layout)
 end
@@ -561,3 +563,32 @@ function plot_fisher_z(x::DataFrame, name::Vector{String})
 #    
     plot(data, layout)
 end
+
+function correspond(x::Vector{String}, y::Vector{String})
+  (m, n) = (length(x), length(y))
+  xperm = sortperm(x)
+  yperm = sortperm(y)
+  x_to_y = zeros(Int, m)
+  y_to_x = zeros(Int, n)
+  (i, j) = (1, 1)
+  done = false
+  while !done
+    ii = xperm[i]
+    jj = yperm[j]
+    if x[ii] == y[jj]
+      x_to_y[ii] = jj
+      y_to_x[jj] = ii
+      (i, j) = (i + 1, j + 1)
+    elseif x[ii] < y[jj]
+      i = i +1
+    elseif y[jj] < x[ii]
+      j = j + 1
+    end
+    done = i > m || j > n
+  end
+  return (x_to_y, y_to_x)
+end
+
+# x = ["the", "and", "a", "be", "an"]
+# y = ["but", "be", "a", "an", "so"]
+# (x_to_y, y_to_x) = correspond(x, y)
