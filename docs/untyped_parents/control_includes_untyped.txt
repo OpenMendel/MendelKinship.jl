@@ -9,7 +9,7 @@ snpdefinition_file = SNP_def10c_converted.txt
 # Analysis parameters for Kinship option.
 #
 compare_kinships = true
-full_pedigree_file = Ped10c_includes_untyped_persons.csv
 maf_threshold = 0.01
 kinship_plot = kinship_plot
 z_score_plot = z_score_plot
+full_pedigree_file = Ped10c_includes_untyped_persons.csv

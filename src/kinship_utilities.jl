@@ -40,7 +40,7 @@ function Kinship(control_file = ""; args...)
 #
   process_keywords!(keyword, control_file, args)
 #
-# Check that the correct analysis option was specified.
+# Check that the correct analysis options were specified.
 #
   lc_analysis_option = lowercase(keyword["analysis_option"])
   if (lc_analysis_option != "" &&
@@ -110,79 +110,168 @@ function Kinship(control_file = ""; args...)
   return nothing
 end # function Kinship
 
-"""Compares theoretical and empirical kinship coefficients."""
-function compare_kinships(pedigree::Pedigree, person::Person,
+function compare_kinships(genotyped_pedigree::Pedigree, genotyped_person::Person,
   snpdata::SnpDataStruct, keyword::Dict{AbstractString, Any}, entryorder::Vector{Int})
 #
-  people = person.people
-  pedigrees = pedigree.pedigrees
+# Initialize constants
+#
+  genotyped_people = genotyped_person.people
+  deviant_pairs = keyword["deviant_pairs"]
+  if deviant_pairs == 0
+    deviant_pairs = genotyped_people^2
+  end
+#
+# If the full pedigree contains people without snp information, replace the current
+# pedigree and person data struction with a larger pedigree/person that holds everyone, 
+# including people without SNPs. Keep track of which person have SNP in vector `contain_snp`
+#
+  if keyword["full_pedigree_file"] != ""
+    full_pedigree, full_person, contain_snp = compute_full_person_and_pedigree(keyword, genotyped_person)
+    all_people = full_person.people
+  end
+#
+# Initialize more constants
+#
+  full_pedigrees = full_pedigree.pedigrees
+  full_people = full_person.people
   xlinked = keyword["xlinked_analysis"]
   maf_threshold = keyword["maf_threshold"]
+  grm_method = Symbol(keyword["grm_method"])
+#
+# People are reordered, and some may not have SNP info. Compute identification 
+# maps to match positions of ids in two vectors of ids. 
+#
+  personid_in_snpdata = copy(snpdata.personid)
+  invpermute!(personid_in_snpdata, entryorder) #necessary because snpdata.personid has already been permuted
+  (name_to_id, id_to_name) = correspond(full_person.name, personid_in_snpdata)
+  # println(name_to_id)
+  # println(id_to_name)
+  # println(person.name)
+  # println(contain_snp)
+  # println(personid_in_snpdata)
+#
+# Compute the genetic relationship matrix and apply Fisher's transform
+#
+  GRM = grm(snpdata.snpmatrix, method=grm_method, minmaf=maf_threshold)
+  clamp!(GRM, -0.99999, 0.99999) 
+  GRM .= atanh.(GRM)
+#
+# For each pedigrees, compute empiric kinship coeffs and subtract theoretical kinship coeffs
+#
+  kinship = Vector{Matrix{Float64}}(undef, full_pedigrees)
+  for ped = 1:full_pedigrees
+    kinship[ped] = kinship_matrix(full_pedigree, full_person, ped, xlinked)
+    q = full_pedigree.start[ped] - 1
+    for j = 1:full_pedigree.individuals[ped]
+      jj = name_to_id[j + q]
+      if jj == 0; continue; end
+      for i = j:full_pedigree.individuals[ped]
+        ii = name_to_id[i + q]
+        if ii == 0; continue; end
+        GRM[ii, jj] = GRM[ii, jj] - atanh(kinship[ped][i, j])
+        GRM[jj, ii] = GRM[ii, jj]
+      end
+    end
+  end
+#
+# Find the indices of the most deviant pairs.
+#
+  p = partialsortperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
+  genotyped_indices = CartesianIndices((genotyped_people, genotyped_people))[p]
+  # p = selectperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
+  # (rowindex, columnindex) = ind2sub((people, people), p)
+#
+# Enter the most deviant pairs in a data frame.
+#
+  kinship_frame = DataFrame(Pedigree1 = String[], Pedigree2 = String[], 
+    Person1 = String[], Person2 = String[], theoretical_kinship= Float64[], 
+    empiric_kinship=Float64[])
+  r = 0.0
+  for k = 1:deviant_pairs
+    (ii, jj) = (genotyped_indices[k][1], genotyped_indices[k][2]) # index of kth largest deviation in GRM matrix
+    (i, j) = (id_to_name[ii], id_to_name[jj]) # maps snpid back to its location in full person's name
+    if j > i; continue; end
+    (pedi, pedj) = (full_person.pedigree[i], full_person.pedigree[j]) # pedigrees of i and j
+    if pedi == pedj
+      q = full_pedigree.start[pedi] - 1
+      r = GRM[ii, jj] + atanh(kinship[pedi][i - q, j - q]) 
+      push!(kinship_frame, [full_pedigree.name[pedi], full_pedigree.name[pedj], full_person.name[i], 
+        full_person.name[j], kinship[pedi][i - q, j - q], tanh(r)])     
+    else
+      push!(kinship_frame, [full_pedigree.name[pedi], full_pedigree.name[pedj], full_person.name[i], 
+        full_person.name[j], 0.0, tanh(GRM[ii, jj])])
+    end
+  end
+  return kinship_frame
+end
+
+
+"""Compares theoretical and empirical kinship coefficients."""
+function compare_kinships_old(pedigree::Pedigree, person::Person,
+  snpdata::SnpDataStruct, keyword::Dict{AbstractString, Any}, entryorder::Vector{Int})
+#
+# Initialize constants
+#
+  people = person.people
   deviant_pairs = keyword["deviant_pairs"]
   if deviant_pairs == 0
     deviant_pairs = people^2
   end
 #
-# Create a vector of kinship matrices, one for each pedigree.
+# If the full pedigree contains people without snp information, replace the current
+# pedigree and person data struction with a larger pedigree/person that holds everyone, 
+# including people without SNPs. Keep track of which person have SNP in vector `contain_snp`
 #
-  kinship = Vector{Matrix{Float64}}(undef, pedigrees)
+  if keyword["full_pedigree_file"] != ""
+    full_pedigree, full_person, contain_snp = compute_full_person_and_pedigree(keyword, person)
+    pedigree = full_pedigree
+    person = full_person
+    people = person.people
+  end
 #
-# Create a copy of snpdata.personid that orders people similarly to person.name.
-# After ipermute!, personid_in_snpdate stores the personid's order as the pedigree
-# file originally stored it as. 
+# Initialize more constants
+#
+  pedigrees = pedigree.pedigrees
+  xlinked = keyword["xlinked_analysis"]
+  maf_threshold = keyword["maf_threshold"]
+  grm_method = Symbol(keyword["grm_method"])
+#
+# People are reordered, and some may not have SNP info. Compute identification 
+# maps to match positions of ids in two vectors of ids. 
 #
   personid_in_snpdata = copy(snpdata.personid)
-  invpermute!(personid_in_snpdata, entryorder) 
-#
-# Since people are reordered (so parents before children...etc), compute identification 
-# maps to match positions of ids in two vectors of ids.
-#
-  name_to_id = indexin(person.name, personid_in_snpdata)
-  id_to_name = indexin(personid_in_snpdata, person.name)
-
+  invpermute!(personid_in_snpdata, entryorder) #necessary because snpdata.personid has already been permuted
+  (name_to_id, id_to_name) = correspond(person.name, personid_in_snpdata)
   println(name_to_id)
-  # (name_to_id, id_to_name) = correspond(person.name, snpdata.personid)
-  #
-  # If the full pedigree contains people without snp information, construct a separate
-  # pedigree that holds only people with snp information. Keep track of which
-  # person have SNP info in `contain_snp` (false = the person don't have snp info)
-  #
-    contain_snp = falses(person.people)
-    if keyword["use_two_pedigree"]
-      snp_pedigree_df = read_plink_fam_file(keyword["pedigree_file"], keyword)
-      for i in 1:person.people
-        if personid_in_snpdata[i] in snp_pedigree_df[:Person]
-          contain_snp[i] = true
-        end
-      end
-    end
-  #
-  # Set people that have no snp to "0" in the permutation, so that they are 
-  # skipped in the empiric kinship computation
-  #
-    name_to_id[contain_snp .== 0] .= 0
+  println(id_to_name)
+  println(person.name)
+  println(contain_snp)
+  println(personid_in_snpdata)
 #
-# Compute and transform the genetic relationship matrix.
+# Compute the genetic relationship matrix and apply Fisher's transform
 #
-  method = keyword["grm_method"]
-  GRM = grm(snpdata.snpmatrix, method=method, minmaf=maf_threshold)
+  GRM = grm(snpdata.snpmatrix, method=grm_method, minmaf=maf_threshold)
   clamp!(GRM, -0.99999, 0.99999) 
-  map!(x -> atanh(x), GRM, GRM) #fisher's transformation
+  GRM .= atanh.(GRM)
 #
-# Loop over all pedigrees.
+# For each pedigrees, compute empiric kinship coeffs and subtract theoretical kinship coeffs
 #
+  kinship = Vector{Matrix{Float64}}(undef, pedigrees)
   for ped = 1:pedigrees
-#
-# Compute theoretical coefficients and adjust the GRM matrix.
-#
     kinship[ped] = kinship_matrix(pedigree, person, ped, xlinked)
     q = pedigree.start[ped] - 1
     for j = 1:pedigree.individuals[ped]
       jj = name_to_id[j + q]
-      if jj == 0; continue; end
+      if jj == 0
+        println(j + q)
+        continue
+      end
       for i = j:pedigree.individuals[ped]
         ii = name_to_id[i + q]
-        if ii == 0; continue; end
+        if ii == 0
+          println(i + q)
+          continue
+        end
         GRM[ii, jj] = GRM[ii, jj] - atanh(kinship[ped][i, j])
         GRM[jj, ii] = GRM[ii, jj]
       end
@@ -203,10 +292,10 @@ function compare_kinships(pedigree::Pedigree, person::Person,
     empiric_kinship=Float64[])
   r = 0.0
   for k = 1:deviant_pairs
-    (ii, jj) = (my_indices[k][1], my_indices[k][2]) # index of kth largest deviation
-    (i, j) = (id_to_name[ii], id_to_name[jj]) # maps snpid back to person name
+    (ii, jj) = (my_indices[k][1], my_indices[k][2]) # index of kth largest deviation in GRM matrix
+    (i, j) = (id_to_name[ii], id_to_name[jj]) # maps snpid back to person name: (i, j) = (8, 9) and (ii, jj) = (7, 8)
     if j > i; continue; end
-    (pedi, pedj) = (person.pedigree[i], person.pedigree[j]) # pedigrees of i and j    
+    (pedi, pedj) = (person.pedigree[i], person.pedigree[j]) # pedigrees of i and j
     if pedi == pedj
       q = pedigree.start[pedi] - 1
       r = GRM[ii, jj] + atanh(kinship[pedi][i - q, j - q]) 
@@ -564,7 +653,7 @@ function plot_fisher_z(x::DataFrame, name::Vector{String})
     plot(data, layout)
 end
 
-function correspond(x::Vector{String}, y::Vector{String})
+function correspond(x::AbstractVector{AbstractString}, y::AbstractVector{AbstractString})
   (m, n) = (length(x), length(y))
   xperm = sortperm(x)
   yperm = sortperm(y)
@@ -592,3 +681,93 @@ end
 # x = ["the", "and", "a", "be", "an"]
 # y = ["but", "be", "a", "an", "so"]
 # (x_to_y, y_to_x) = correspond(x, y)
+
+function compute_full_person_and_pedigree(keyword :: Dict{AbstractString, Any}, 
+  subset_person :: Person)
+#
+  smaller_pedigree = keyword["pedigree_file"]
+  full_pedigree = keyword["full_pedigree_file"]
+  snpdefinition_file = keyword["snpdefinition_file"]
+  snpdata_file = keyword["snpdata_file"]
+#
+# Use MendelBase's function to construct a "full" pedigree and person, keeping track
+# of key/value pairs in keyword
+#
+  keyword["pedigree_file"] = full_pedigree
+  keyword["snpdefinition_file"] = "" #avoid reading in snpdata again
+  keyword["snpdata_file"] = ""
+  full_pedigree, full_person, = read_external_data_files(keyword)
+  keyword["pedigree_file"] = smaller_pedigree
+  keyword["snpdefinition_file"] = snpdefinition_file
+  keyword["snpdata_file"] = snpdata_file
+#
+# now compute indicator of person i having SNP information
+#
+  total_people = full_person.people
+  contain_snp = falses(total_people)
+  for i in 1:total_people
+    person_i = full_person.name[i]
+    (person_i in subset_person.name) && (contain_snp[i] = true)
+  end
+
+  return full_pedigree, full_person, contain_snp
+end 
+
+
+function compute_full_person_and_pedigree2(keyword :: Dict{AbstractString, Any}, 
+  subset_person :: Person)
+#
+  smaller_pedigree = copy(keyword["pedigree_file"])
+  full_pedigree = copy(keyword["full_pedigree_file"])
+#
+# Use MendelBase's function to construct a "full" pedigree and person, keeping track
+# of key/value pairs in keyword
+#
+  keyword["pedigree_file"] = full_pedigree
+  full_pedigree, full_person, = read_external_data_files(keyword)
+  keyword["pedigree_file"] = smaller_pedigree
+  # #
+  # # first construct the full pedigree
+  # #
+  # field_sep = keyword["field_separator"]
+  # allow_padding = (field_sep == ' ')
+  # null_string = keyword["missing_value"]
+  # pedigree_file = string(keyword["full_pedigree_file"])
+  # if occursin(".fam", pedigree_file)
+  #   full_pedigree_df = read_plink_fam_file(pedigree_file, keyword)
+  # else
+  #   full_pedigree_df = CSV.File(pedigree_file; header = true,
+  #     delim = field_sep, ignorerepeated = allow_padding,
+  #     missingstring = null_string) |> DataFrame
+  # end
+  # full_pedigree = MendelBase.pedigree_information(full_pedigree_df)
+  # #
+  # # Next compute the new person data structure, which requires an empty locus 
+  # #
+  # locus_frame = DataFrame()
+  # phenotype_frame = DataFrame()
+  # MendelBase.check_populations(locus_frame, full_pedigree_df, keyword)
+  # locus = MendelBase.locus_information(locus_frame, full_pedigree_df, keyword)
+  # full_person = MendelBase.person_information(locus_frame, full_pedigree_df, phenotype_frame,
+  #   locus, full_pedigree, keyword)
+  # #
+  # # Fill in extra fields in the new Pedigree, and do some checking
+  # #
+  # MendelBase.pedigree_counts!(full_pedigree, full_person)
+  # nuclear_family = MendelBase.construct_nuclear_families(full_pedigree, full_person)
+  # MendelBase.check_data_structures!(full_pedigree, full_person, locus, nuclear_family, keyword)
+  #
+  # now compute indicator of person i having SNP information
+  #
+  total_people = full_person.people
+  contain_snp = falses(total_people)
+  for i in 1:total_people
+    person_i = string(full_pedigree_df[i, 2])
+    (person_i in subset_person.name) && (contain_snp[i] = true)
+  end
+
+  # println(full_pedigree.individuals)
+  # return fff
+
+  # return full_pedigree, full_person, contain_snp
+end # function compute_full_person_and_pedigree
