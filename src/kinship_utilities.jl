@@ -121,19 +121,20 @@ function compare_kinships(genotyped_pedigree::Pedigree, genotyped_person::Person
     deviant_pairs = genotyped_people^2
   end
 #
-# If the full pedigree contains people without snp information, replace the current
-# pedigree and person data struction with a larger pedigree/person that holds everyone, 
-# including people without SNPs. Keep track of which person have SNP in vector `contain_snp`
+# If the full pedigree contains people without snp information, initialize the full
+# pedigree/person including people without SNPs. The vector `contain_snp` (which is not used)
+# keeps track of all people, where contain_snp[i] = false means person i have no SNP
 #
   if keyword["full_pedigree_file"] != ""
     full_pedigree, full_person, contain_snp = compute_full_person_and_pedigree(keyword, genotyped_person)
-    all_people = full_person.people
+  else
+    full_pedigree = genotyped_pedigree
+    full_person = genotyped_person
   end
 #
 # Initialize more constants
 #
   full_pedigrees = full_pedigree.pedigrees
-  full_people = full_person.people
   xlinked = keyword["xlinked_analysis"]
   maf_threshold = keyword["maf_threshold"]
   grm_method = Symbol(keyword["grm_method"])
@@ -144,11 +145,6 @@ function compare_kinships(genotyped_pedigree::Pedigree, genotyped_person::Person
   personid_in_snpdata = copy(snpdata.personid)
   invpermute!(personid_in_snpdata, entryorder) #necessary because snpdata.personid has already been permuted
   (name_to_id, id_to_name) = correspond(full_person.name, personid_in_snpdata)
-  # println(name_to_id)
-  # println(id_to_name)
-  # println(person.name)
-  # println(contain_snp)
-  # println(personid_in_snpdata)
 #
 # Compute the genetic relationship matrix and apply Fisher's transform
 #
@@ -164,10 +160,10 @@ function compare_kinships(genotyped_pedigree::Pedigree, genotyped_person::Person
     q = full_pedigree.start[ped] - 1
     for j = 1:full_pedigree.individuals[ped]
       jj = name_to_id[j + q]
-      if jj == 0; continue; end
+      jj == 0 && continue
       for i = j:full_pedigree.individuals[ped]
         ii = name_to_id[i + q]
-        if ii == 0; continue; end
+        ii == 0 && continue
         GRM[ii, jj] = GRM[ii, jj] - atanh(kinship[ped][i, j])
         GRM[jj, ii] = GRM[ii, jj]
       end
@@ -178,8 +174,6 @@ function compare_kinships(genotyped_pedigree::Pedigree, genotyped_person::Person
 #
   p = partialsortperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
   genotyped_indices = CartesianIndices((genotyped_people, genotyped_people))[p]
-  # p = selectperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
-  # (rowindex, columnindex) = ind2sub((people, people), p)
 #
 # Enter the most deviant pairs in a data frame.
 #
@@ -190,7 +184,7 @@ function compare_kinships(genotyped_pedigree::Pedigree, genotyped_person::Person
   for k = 1:deviant_pairs
     (ii, jj) = (genotyped_indices[k][1], genotyped_indices[k][2]) # index of kth largest deviation in GRM matrix
     (i, j) = (id_to_name[ii], id_to_name[jj]) # maps snpid back to its location in full person's name
-    if j > i; continue; end
+    j > i && continue
     (pedi, pedj) = (full_person.pedigree[i], full_person.pedigree[j]) # pedigrees of i and j
     if pedi == pedj
       q = full_pedigree.start[pedi] - 1
@@ -200,110 +194,6 @@ function compare_kinships(genotyped_pedigree::Pedigree, genotyped_person::Person
     else
       push!(kinship_frame, [full_pedigree.name[pedi], full_pedigree.name[pedj], full_person.name[i], 
         full_person.name[j], 0.0, tanh(GRM[ii, jj])])
-    end
-  end
-  return kinship_frame
-end
-
-
-"""Compares theoretical and empirical kinship coefficients."""
-function compare_kinships_old(pedigree::Pedigree, person::Person,
-  snpdata::SnpDataStruct, keyword::Dict{AbstractString, Any}, entryorder::Vector{Int})
-#
-# Initialize constants
-#
-  people = person.people
-  deviant_pairs = keyword["deviant_pairs"]
-  if deviant_pairs == 0
-    deviant_pairs = people^2
-  end
-#
-# If the full pedigree contains people without snp information, replace the current
-# pedigree and person data struction with a larger pedigree/person that holds everyone, 
-# including people without SNPs. Keep track of which person have SNP in vector `contain_snp`
-#
-  if keyword["full_pedigree_file"] != ""
-    full_pedigree, full_person, contain_snp = compute_full_person_and_pedigree(keyword, person)
-    pedigree = full_pedigree
-    person = full_person
-    people = person.people
-  end
-#
-# Initialize more constants
-#
-  pedigrees = pedigree.pedigrees
-  xlinked = keyword["xlinked_analysis"]
-  maf_threshold = keyword["maf_threshold"]
-  grm_method = Symbol(keyword["grm_method"])
-#
-# People are reordered, and some may not have SNP info. Compute identification 
-# maps to match positions of ids in two vectors of ids. 
-#
-  personid_in_snpdata = copy(snpdata.personid)
-  invpermute!(personid_in_snpdata, entryorder) #necessary because snpdata.personid has already been permuted
-  (name_to_id, id_to_name) = correspond(person.name, personid_in_snpdata)
-  println(name_to_id)
-  println(id_to_name)
-  println(person.name)
-  println(contain_snp)
-  println(personid_in_snpdata)
-#
-# Compute the genetic relationship matrix and apply Fisher's transform
-#
-  GRM = grm(snpdata.snpmatrix, method=grm_method, minmaf=maf_threshold)
-  clamp!(GRM, -0.99999, 0.99999) 
-  GRM .= atanh.(GRM)
-#
-# For each pedigrees, compute empiric kinship coeffs and subtract theoretical kinship coeffs
-#
-  kinship = Vector{Matrix{Float64}}(undef, pedigrees)
-  for ped = 1:pedigrees
-    kinship[ped] = kinship_matrix(pedigree, person, ped, xlinked)
-    q = pedigree.start[ped] - 1
-    for j = 1:pedigree.individuals[ped]
-      jj = name_to_id[j + q]
-      if jj == 0
-        println(j + q)
-        continue
-      end
-      for i = j:pedigree.individuals[ped]
-        ii = name_to_id[i + q]
-        if ii == 0
-          println(i + q)
-          continue
-        end
-        GRM[ii, jj] = GRM[ii, jj] - atanh(kinship[ped][i, j])
-        GRM[jj, ii] = GRM[ii, jj]
-      end
-    end
-  end
-#
-# Find the indices of the most deviant pairs.
-#
-  p = partialsortperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
-  my_indices = CartesianIndices((people, people))[p]
-  # p = selectperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
-  # (rowindex, columnindex) = ind2sub((people, people), p)
-#
-# Enter the most deviant pairs in a data frame.
-#
-  kinship_frame = DataFrame(Pedigree1 = String[], Pedigree2 = String[], 
-    Person1 = String[], Person2 = String[], theoretical_kinship= Float64[], 
-    empiric_kinship=Float64[])
-  r = 0.0
-  for k = 1:deviant_pairs
-    (ii, jj) = (my_indices[k][1], my_indices[k][2]) # index of kth largest deviation in GRM matrix
-    (i, j) = (id_to_name[ii], id_to_name[jj]) # maps snpid back to person name: (i, j) = (8, 9) and (ii, jj) = (7, 8)
-    if j > i; continue; end
-    (pedi, pedj) = (person.pedigree[i], person.pedigree[j]) # pedigrees of i and j
-    if pedi == pedj
-      q = pedigree.start[pedi] - 1
-      r = GRM[ii, jj] + atanh(kinship[pedi][i - q, j - q]) 
-      push!(kinship_frame, [pedigree.name[pedi], pedigree.name[pedj], person.name[i], 
-        person.name[j], kinship[pedi][i - q, j - q], tanh(r)])     
-    else
-      push!(kinship_frame, [pedigree.name[pedi], pedigree.name[pedj], person.name[i], 
-        person.name[j], 0.0, tanh(GRM[ii, jj])])
     end
   end
   return kinship_frame
