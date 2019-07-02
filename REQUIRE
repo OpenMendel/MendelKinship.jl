@@ -2,5 +2,9 @@ julia 0.7
 
 CSV
 DataFrames
+ORCA
+PlotlyJS
+StatsBase
 
 MendelBase
+SnpArrays

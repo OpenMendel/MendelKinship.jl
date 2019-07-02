@@ -8,11 +8,15 @@ This [Julia](http://julialang.org/) package computes genetic kinship and other i
 
 *Note: The three OpenMendel packages (1) [SnpArrays](https://openmendel.github.io/SnpArrays.jl/latest/), (2) [MendelSearch](https://openmendel.github.io/MendelSearch.jl), and (3) [MendelBase](https://openmendel.github.io/MendelBase.jl) must be installed before any other OpenMendel package will run. It is easiest if these three packages are installed in the above order and before any other OpenMendel package.*
 
-Within Julia, use the package manager to install MendelKinship:
+Within Julia, to install MendelKinship use the package manager (invoked via the `]` key, and escaped via the backspace key) and type:
 
-    pkg> add https://github.com/OpenMendel/MendelKinship.jl.git
+    pkg> add https://github.com/OpenMendel/MendelKinship.jl
 
 This package supports Julia v1.0+
+
+## Tutorial
+
+A tutorial for MendelKinship is available at [kinship-tutorial](https://github.com/OpenMendel/Tutorials/blob/master/Kinship/KinshipTutorial.ipynb) from the OpenMendel Tutorials github page. 
 
 ## Data Files
 
@@ -40,7 +44,7 @@ Finally, to run the analysis using the parameters in the control file Control_fi
 
 If you use this analysis package in your research, please cite the following reference in the resulting publications:
 
-*OPENMENDEL: a cooperative programming project for statistical genetics. Zhou H, Sinsheimer JS, Bates DM, Chu BB, German CA, Ji SS, Keys KL, Kim J, Ko S, Mosher GD, Papp JC, Sobel EM, Zhai J, Zhou JJ, Lange K. Hum Genet. 2019 Mar 26. doi: 10.1007/s00439-019-02001-z. [Epub ahead of print] PMID: 30915546*
+OPENMENDEL: a cooperative programming project for statistical genetics. Zhou H, Sinsheimer JS, Bates DM, Chu BB, German CA, Ji SS, Keys KL, Kim J, Ko S, Mosher GD, Papp JC, Sobel EM, Zhai J, Zhou JJ, Lange K. *Human Genetics* (2019). DOI: 10.1007/s00439-019-02001-z
 
 <!--- ## Contributing
 We welcome contributions to this Open Source project. To contribute, follow this procedure ... --->
