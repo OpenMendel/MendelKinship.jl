@@ -1,0 +1,15 @@
+#
+# Input and Output files.
+#
+plink_field_separator = ','
+pedigree_file = Ped29a_subset.fam
+snpdata_file = SNP_data29a.bed
+snpdefinition_file = SNP_def29a_converted.txt
+#
+# Analysis parameters for Kinship option.
+#
+compare_kinships = true
+maf_threshold = 0.01
+kinship_plot = kinship_plot
+z_score_plot = z_score_plot
+full_pedigree_file = Ped29a_full.fam
