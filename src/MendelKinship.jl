@@ -7,9 +7,8 @@ The delta7 matrix is derived from the kinship matrix for non-inbred pedigrees.
 The remaining identity coefficients of Jacquard are computed by simulation.
 """
 module MendelKinship
-#
-# Required OpenMendel packages and modules.
-#
+
+using SnpArrays
 using MendelBase
 using SnpArrays
 #
@@ -22,11 +21,10 @@ using PlotlyJS
 using StatsBase
 
 export Kinship
+export compare_kinships, kinship_option, kinship_matrix, delta7_matrix, jacquard_coefficients
+export cotwin_extension!, identity_state, correspond, compute_full_pedigree
 
-"""
-This is the wrapper function for the Kinship analysis option.
-"""
-function Kinship(control_file = ""; args...)
+include("kinship_utilities.jl")
 
   KINSHIP_VERSION :: VersionNumber = v"0.8.0"
   #
