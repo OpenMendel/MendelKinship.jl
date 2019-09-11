@@ -1,7 +1,7 @@
 name = "MendelKinship"
 desc = "Kinship calculations; part of the OpenMendel project."
 uuid = "82a28c69-7afd-556c-aa99-b3efd3c23126"
-version = "0.8.0"
+version = "0.8.8"
 license = "MIT"
 authors = ["Kenneth Lange <klange@ucla.edu>", "Eric Sobel <esobel@ucla.edu>", "Ben Chu <benchu99@hotmail.com>", "OpenMendel Team"]
 keywords = ["OpenMendel", "kinship"]

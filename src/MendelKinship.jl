@@ -27,15 +27,12 @@ export Kinship
 This is the wrapper function for the Kinship analysis option.
 """
 function Kinship(control_file = ""; args...)
-
-  KINSHIP_VERSION :: VersionNumber = v"0.8.0"
   #
   # Print the logo. Store the initial directory.
   #
   print(" \n \n")
   println("     Welcome to OpenMendel's")
   println("     Kinship analysis option")
-  println("        version ", KINSHIP_VERSION)
   print(" \n \n")
   println("Reading the data.\n")
   initial_directory = pwd()
@@ -82,7 +79,7 @@ function Kinship(control_file = ""; args...)
   # Read the genetic data from the external files named in the keywords.
   #
   (pedigree, person, nuclear_family, locus, snpdata,
-    locus_frame, phenotype_frame, pedigree_frame, snp_definition_frame) =
+    locus_frame, phenotype_frame, person_frame, snp_definition_frame) =
     read_external_data_files(keyword)
   #
   # Check if SNP data were read and names are unique.
@@ -108,8 +105,8 @@ function Kinship(control_file = ""; args...)
   println(" \nAnalyzing the data.\n")
   execution_error = false
   if keyword["compare_kinships"]
-    kinship_frame = compare_kinships(pedigree_frame, pedigree, person,
-      snpdata, keyword)
+    kinship_frame = compare_kinships(pedigree, person, snpdata,
+                                     person_frame, keyword)
   else
     kinship_frame = theoretical_coefficients(pedigree, person, keyword)
   end
@@ -134,9 +131,9 @@ This function orchestrates the comparison of theoretical
 and empirical kinships including Fisher z-scores.
 The results are placed in a dataframe.
 """
-function compare_kinships(pedigree_frame::DataFrame,
-  genotyped_pedigree::Pedigree, genotyped_person::Person,
-  snpdata::SnpDataStruct, keyword::Dict{AbstractString, Any})
+function compare_kinships(genotyped_pedigree::Pedigree,
+  genotyped_person::Person, snpdata::SnpDataStruct,
+  person_frame::DataFrame, keyword::Dict{AbstractString, Any})
   #
   # Initialize constants
   #
@@ -149,7 +146,7 @@ function compare_kinships(pedigree_frame::DataFrame,
   # Record the order of the individuals in the user data upon entry,
   # before MendelBase permutes them.
   # 
-  entryorder = convert(Vector{Int64}, pedigree_frame[:EntryOrder])
+  entryorder = convert(Vector{Int64}, person_frame[:, :EntryOrder])
   #
   # If the full pedigree contains people without SNP information,
   # initialize the full pedigree and person including people without SNPs.
@@ -191,7 +188,7 @@ function compare_kinships(pedigree_frame::DataFrame,
   kinship = Vector{Matrix{Float64}}(undef, full_pedigrees)
   for ped = 1:full_pedigrees
     kinship[ped] = kinship_matrix(full_pedigree, full_person, ped, xlinked)
-    q = full_pedigree.start[ped] - 1
+    q = full_pedigree.pedstart[ped] - 1
     for j = 1:full_pedigree.individuals[ped]
       jj = name_to_id[j + q]
       jj == 0 && continue
@@ -209,7 +206,7 @@ function compare_kinships(pedigree_frame::DataFrame,
   p = partialsortperm(vec(GRM), 1:deviant_pairs, by = abs, rev = true)
   genotyped_indices = CartesianIndices((genotyped_people, genotyped_people))[p]
   #
-  # Enter the most deviant pairs in a data frame.
+  # Enter the most deviant pairs in a dataframe.
   #
   kinship_frame = DataFrame(Pedigree1 = String[], Pedigree2 = String[],
     Person1 = String[], Person2 = String[], theoretical_kinship= Float64[],
@@ -227,7 +224,7 @@ function compare_kinships(pedigree_frame::DataFrame,
     j > i && continue
     (pedi, pedj) = (full_person.pedigree[i], full_person.pedigree[j])
     if pedi == pedj
-      q = full_pedigree.start[pedi] - 1
+      q = full_pedigree.pedstart[pedi] - 1
       r = GRM[ii, jj] + atanh(kinship[pedi][i - q, j - q]) 
       push!(kinship_frame,
         [full_pedigree.name[pedi], full_pedigree.name[pedj],
@@ -314,7 +311,7 @@ function theoretical_coefficients(pedigree::Pedigree, person::Person,
     #
     # Insert the computed coefficients into the appropriate dataframes.
     #
-    q = pedigree.start[ped] - 1
+    q = pedigree.pedstart[ped] - 1
     for i = 1:pedigree.individuals[ped]
       for j = i:pedigree.individuals[ped]
         push!(kinship_dataframe, [ped, pedigree.name[ped],
@@ -339,14 +336,20 @@ function theoretical_coefficients(pedigree::Pedigree, person::Person,
     combined_dataframe = join(kinship_dataframe, coefficient_dataframe,
       on = [:Pedigree, :Person1, :Person2])
     sort!(combined_dataframe, [:ped1, :Person1, :Person2])
-    deletecols!(combined_dataframe, [:ped1, :ped3])
+##    deletecols!(combined_dataframe, [:ped1, :ped3])
+    names_list = names(combined_dataframe)
+    deleteat!(names_list, findall((in)([:ped1, :ped3]), names_list))
+    select!(combined_dataframe, names_list)
   else
     temp_dataframe = join(kinship_dataframe, delta_dataframe,
       on = [:Pedigree, :Person1, :Person2])
     combined_dataframe = join(temp_dataframe, coefficient_dataframe,
       on = [:Pedigree, :Person1, :Person2])
     sort!(combined_dataframe, [:ped1, :Person1, :Person2])
-    deletecols!(combined_dataframe, [:ped1, :ped2, :ped3])
+##    deletecols!(combined_dataframe, [:ped1, :ped2, :ped3])
+    names_list = names(combined_dataframe)
+    deleteat!(names_list, findall((in)([:ped1, :ped2, :ped3]), names_list))
+    select!(combined_dataframe, names_list)
   end
   #
   # Write the combined coefficient frame to a file and return.
@@ -370,11 +373,11 @@ function kinship_matrix(pedigree::Pedigree, person::Person,
   #
   # Allocate a kinship matrix and an offset.
   #
-  start = pedigree.start[ped]
-  finish = pedigree.finish[ped]
+  pedstart = pedigree.pedstart[ped]
+  pedfinish = pedigree.pedfinish[ped]
   kinship = zeros(Float64, pedigree.individuals[ped], pedigree.individuals[ped])
-  q = start - 1
-  for i = start:finish
+  q = pedstart - 1
+  for i = pedstart:pedfinish
     #
     # Initialize the kinship coefficients for founders.
     #
@@ -391,14 +394,14 @@ function kinship_matrix(pedigree::Pedigree, person::Person,
       #
       if xlinked && person.male[i]
         kinship[i - q, i - q] = 1.0
-        for m = start:i - 1
+        for m = pedstart:i - 1
           kinship[i - q, m - q] = kinship[j - q, m - q]
           kinship[m - q, i - q] = kinship[i - q, m - q]
         end
       else
         k = person.father[i]
         kinship[i - q, i - q] = 0.5 + 0.5 * kinship[j - q, k - q]
-        for m = start:i - 1
+        for m = pedstart:i - 1
           kinship[i - q, m - q] = 0.5 * (kinship[j - q, m - q]
              + kinship[k - q, m - q])
           kinship[m - q, i - q] = kinship[i - q, m - q]
@@ -422,12 +425,12 @@ Person i is a pedigree founder if and only if mother[i] = 0.
 function delta7_matrix(pedigree::Pedigree, person::Person,
   kinship::Matrix{Float64}, ped::Int)
 
-  start = pedigree.start[ped]
-  finish = pedigree.finish[ped]
+  pedstart = pedigree.pedstart[ped]
+  pedfinish = pedigree.pedfinish[ped]
   delta7 = zeros(Float64, pedigree.individuals[ped], pedigree.individuals[ped])
-  q = start - 1
-  for i = start:finish
-    for j = start:i
+  q = pedstart - 1
+  for i = pedstart:pedfinish
+    for j = pedstart:i
       if j == i
         delta7[i - q, i - q] = 1.0
       elseif person.mother[i] > 0 && person.mother[j] > 0
@@ -459,8 +462,8 @@ the more precision attained. X-linked inheritance is possible.
 function jacquard_coefficients(pedigree::Pedigree, person::Person,
   ped::Int, replicates::Int, xlinked::Bool)
 
-  start = pedigree.start[ped]
-  finish = pedigree.finish[ped]
+  pedstart = pedigree.pedstart[ped]
+  pedfinish = pedigree.pedfinish[ped]
   ped_size = pedigree.individuals[ped]
   coefficient = zeros(Float64, 9, ped_size, ped_size)
   x = zeros(Float64, ped_size, ped_size)
@@ -468,10 +471,10 @@ function jacquard_coefficients(pedigree::Pedigree, person::Person,
   #
   # Loop over all replicates.
   #
-  q = start - 1
+  q = pedstart - 1
   for rep = 1:replicates
     f = 0
-    for j = start:finish
+    for j = pedstart:pedfinish
       if person.mother[j] == 0
         f = f + 1
         source[1, j - q] = f
@@ -495,8 +498,8 @@ function jacquard_coefficients(pedigree::Pedigree, person::Person,
     #
     # Loop over all pairs.
     #
-    for j = start:finish
-      for k = start:finish
+    for j = pedstart:pedfinish
+      for k = pedstart:pedfinish
         l = identity_state(source[:, j - q], source[:, k - q])
         coefficient[l, j - q, k - q] = coefficient[l, j - q, k - q] + 1.0
       end
@@ -519,14 +522,14 @@ This function extends identity coefficients to co-twins.
 function cotwin_extension!(x::Matrix{Float64}, pedigree::Pedigree,
   person::Person, ped::Int)
 
-  q = pedigree.start[ped] - 1
-  for i = pedigree.finish[ped] + 1:pedigree.twin_finish[ped]
+  q = pedigree.pedstart[ped] - 1
+  for i = pedigree.pedfinish[ped] + 1:pedigree.twin_finish[ped]
     m = person.primary_twin[i]
-    for j = pedigree.start[ped]:pedigree.finish[ped]
+    for j = pedigree.pedstart[ped]:pedigree.pedfinish[ped]
       x[i - q, j - q] = x[m - q, j - q]
       x[j - q, i - q] = x[i - q, j - q]
     end
-    for j = pedigree.finish[ped] + 1:pedigree.twin_finish[ped]
+    for j = pedigree.pedfinish[ped] + 1:pedigree.twin_finish[ped]
       n = person.primary_twin[j]
       x[i - q, j - q] = x[m - q, n - q]
     end
