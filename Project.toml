@@ -1,15 +1,16 @@
 name = "MendelKinship"
-desc = "Kinship calculations; part of the OpenMendel project."
 uuid = "82a28c69-7afd-556c-aa99-b3efd3c23126"
-version = "0.8.8"
-license = "MIT"
-authors = ["Kenneth Lange <klange@ucla.edu>", "Eric Sobel <esobel@ucla.edu>", "Ben Chu <benchu99@hotmail.com>", "OpenMendel Team"]
 keywords = ["OpenMendel", "kinship"]
+license = "MIT"
+desc = "Kinship calculations; part of the OpenMendel project."
+authors = ["Kenneth Lange <klange@ucla.edu>", "Eric Sobel <esobel@ucla.edu>", "Ben Chu <benchu99@hotmail.com>", "OpenMendel Team"]
+version = "0.8.8"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 MendelBase = "4fb2d825-8540-5432-a3a3-b9ff66df2cb5"
+MendelSearch = "4fa469e6-9890-5c68-874e-584f43f9cdde"
 ORCA = "47be7bcc-f1a6-5447-8b36-7eeeff7534fd"
 PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
 SnpArrays = "4e780e97-f5bf-4111-9dc4-b70aaf691b06"
