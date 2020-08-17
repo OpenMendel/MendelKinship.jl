@@ -24,11 +24,7 @@ This package supports Julia `v1.0`+.
 
 ```@contents
 Pages = [
-    "man/summaryinfo.md",
-    "man/filter.md",
-    "man/convert.md",
-    "man/conformgt.md",
-    "man/api.md"
+    "man/api.md",
 ]
 Depth = 2
 ```
