@@ -5,3 +5,6 @@
 
 docs/build/
 docs/site/
+docs/src/man/*.bed
+docs/src/man/*.txt
+docs/src/man/*.in
