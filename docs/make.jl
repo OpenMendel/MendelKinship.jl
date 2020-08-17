@@ -10,7 +10,9 @@ makedocs(
     clean = true,
     debug = true,
     pages = [
-        "index.md"
+        "Home" => "index.md",
+        "API" => "man/api.md"
+        "Tutorial" => "man/KinshipTutorial.md"
     ]
 )
 
