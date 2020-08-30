@@ -38,15 +38,3 @@ jobs:
         - julia -e 'using Pkg; Pkg.add("Documenter")'
         - julia -e 'using MendelKinship; include(joinpath(dirname(pathof(MendelKinship)), "..", "docs", "make.jl"))'
       after_success: skip
-
-# comment out old installation code for now
-# install:
-#   - julia -e 'ENV["PYTHON"]=""; Pkg.add("PyCall"); Pkg.build("PyCall")'
-#   - julia -e 'Pkg.clone("https://github.com/OpenMendel/SnpArrays.jl.git")'
-#   - julia -e 'Pkg.clone("https://github.com/OpenMendel/Search.jl.git")'
-#   - julia -e 'Pkg.clone("https://github.com/OpenMendel/MendelBase.jl.git")'
-  
-# uncomment the following lines to override the default test script
-#script:
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#  - julia -e 'Pkg.clone(pwd()); Pkg.build("MendelKinship"); Pkg.test("MendelKinship"; coverage=true)'
