@@ -1,22 +1,26 @@
 # MendelKinship
 
+| **Documentation** | **Build Status** | **Code Coverage**  |
+|-------------------|------------------|--------------------|
+| [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://openmendel.github.io/MendelKinship/dev/) | [![Build Status](https://travis-ci.org/OpenMendel/MendelKinship.jl.svg?branch=master)](https://travis-ci.org/OpenMendel/MendelKinship.jl)| [![Coverage Status](https://coveralls.io/repos/github/OpenMendel/MendelKinship.jl/badge.svg?branch=master)](https://coveralls.io/github/OpenMendel/MendelKinship.jl?branch=master) |
+
 This [Julia](http://julialang.org/) package computes genetic kinship and other identity coefficients. MendelKinship is one component of the umbrella [OpenMendel](https://openmendel.github.io) project.
 
 [![](https://img.shields.io/badge/docs-current-blue.svg)](https://OpenMendel.github.io/MendelKinship.jl)
 
 ## Installation
 
-*Note: The three OpenMendel packages (1) [SnpArrays](https://openmendel.github.io/SnpArrays.jl/latest/), (2) [MendelSearch](https://openmendel.github.io/MendelSearch.jl), and (3) [MendelBase](https://openmendel.github.io/MendelBase.jl) must be installed before any other OpenMendel package will run. It is easiest if these three packages are installed in the above order and before any other OpenMendel package.*
+Download and install [Julia](https://julialang.org/downloads/). Within Julia, copy and paste the following: 
 
-Within Julia, to install MendelKinship use the package manager (invoked via the `]` key, and escaped via the backspace key) and type:
+```julia
+using Pkg
+Pkg.add(PackageSpec(url="https://github.com/OpenMendel/SnpArrays.jl.git"))
+Pkg.add(PackageSpec(url="https://github.com/OpenMendel/MendelSearch.jl.git"))
+Pkg.add(PackageSpec(url="https://github.com/OpenMendel/MendelBase.jl.git"))
+Pkg.add(PackageSpec(url="https://github.com/OpenMendel/MendelKinship.jl.git"))
+```
 
-    pkg> add https://github.com/OpenMendel/MendelKinship.jl
-
-This package supports Julia v1.0+
-
-## Tutorial
-
-A tutorial for MendelKinship is available at [kinship-tutorial](https://github.com/OpenMendel/Tutorials/blob/master/Kinship/KinshipTutorial.ipynb) from the OpenMendel Tutorials github page. 
+This package supports Julia `v1.0`+.
 
 ## Data Files
 

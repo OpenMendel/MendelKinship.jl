@@ -1,13 +1,12 @@
 # API
 
-Documentation for `MendelKinship.jl`'s functions.
+List of `MendelKinship.jl`'s functions.
 
 ## Index
 
 ```@index
 Pages = ["api.md"]
 ```
-
 
 ## Functions
 
