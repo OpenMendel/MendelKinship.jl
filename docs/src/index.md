@@ -1,6 +1,6 @@
 *Julia utilities for computing theoretical/empirical kinship and other identity coefficients*
 
-Mendel Kinship is a component of the umbrella [OpenMendel project](https://github.com/OpenMendel). 
+`MendelKinship.jl` is a component of the umbrella [OpenMendel project](https://github.com/OpenMendel). 
 
 ## Package features
 + Calculation of empirical and theoretical kinship coefficients, and their comparisons
