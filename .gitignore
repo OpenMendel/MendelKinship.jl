@@ -2,6 +2,11 @@
 *.jl.*.cov
 *.jl.mem
 .DS_Store
+*.ipynb_checkpoints
 
 docs/build/
 docs/site/
+docs/src/man/*.bed
+docs/src/man/*.txt
+docs/src/man/*.in
+docs/src/man/*.html

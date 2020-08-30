@@ -1,23 +1,21 @@
-using Documenter, MendelKinship
-
-ENV["DOCUMENTER_DEBUG"] = "true"
+using Documenter
+using MendelKinship
 
 makedocs(
-    format = :html,
     sitename = "MendelKinship",
+    format = Documenter.HTML(),
     modules = [MendelKinship],
-    authors = "Jeanette Papp",
-    clean = true,
-    debug = true,
     pages = [
-        "index.md"
+        "Home" => "index.md",
+        "API" => "man/api.md",
+        "Tutorial" => "man/KinshipTutorial.md"
     ]
 )
 
+# Documenter can also automatically deploy documentation to gh-pages.
+# See "Hosting Documentation" and deploydocs() in the Documenter manual
+# for more information.
 deploydocs(
     repo   = "github.com/OpenMendel/MendelKinship.jl.git",
-    target = "build",
-    julia  = "1.0",
-    deps   = nothing,
-    make   = nothing
+    target = "build"
 )
