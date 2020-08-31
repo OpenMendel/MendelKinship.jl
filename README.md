@@ -2,11 +2,9 @@
 
 | **Documentation** | **Build Status** | **Code Coverage**  |
 |-------------------|------------------|--------------------|
-| [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://openmendel.github.io/MendelKinship/dev/) | [![Build Status](https://travis-ci.org/OpenMendel/MendelKinship.jl.svg?branch=master)](https://travis-ci.org/OpenMendel/MendelKinship.jl)| [![Coverage Status](https://coveralls.io/repos/github/OpenMendel/MendelKinship.jl/badge.svg?branch=master)](https://coveralls.io/github/OpenMendel/MendelKinship.jl?branch=master) |
+| [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://openmendel.github.io/MendelKinship.jl/dev/) | [![Build Status](https://travis-ci.org/OpenMendel/MendelKinship.jl.svg?branch=master)](https://travis-ci.org/OpenMendel/MendelKinship.jl)| [![Coverage Status](https://coveralls.io/repos/github/OpenMendel/MendelKinship.jl/badge.svg?branch=master)](https://coveralls.io/github/OpenMendel/MendelKinship.jl?branch=master) |
 
 This [Julia](http://julialang.org/) package computes genetic kinship and other identity coefficients. MendelKinship is one component of the umbrella [OpenMendel](https://openmendel.github.io) project.
-
-[![](https://img.shields.io/badge/docs-current-blue.svg)](https://OpenMendel.github.io/MendelKinship.jl)
 
 ## Installation
 
@@ -24,7 +22,7 @@ This package supports Julia `v1.0`+.
 
 ## Data Files
 
-To run this analysis package you will need to prepare a Control file and have your data files available. The Control file holds the names of your data files and any optional parameters for the analysis. Details on the general format and contents of the Control and data files can be found on the MendelBase [documentation page](https://openmendel.github.io/MendelBase.jl). Descriptions of the specific options available within the MendelKinship analysis package are in its [documentation page](https://openmendel.github.io/MendelKinship.jl).
+To run this analysis package you will need to prepare a Control file and have your data files available. The Control file holds the names of your data files and any optional parameters for the analysis. Details on the general format and contents of the Control and data files can be found on the MendelBase [documentation page](https://openmendel.github.io/MendelBase.jl). Descriptions of the specific options available within the MendelKinship analysis package are in its [documentation page](https://openmendel.github.io/MendelKinship/dev/). The old documentation can be accessed [here](https://openmendel.github.io/MendelKinship.jl)
 
 There are example data files in the "data" subfolder of each Mendel package.
 
