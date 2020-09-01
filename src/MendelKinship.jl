@@ -23,6 +23,8 @@ using StatsBase
 export Kinship
 
 """
+  Kinship(control_file = ""; args...)
+
 This is the wrapper function for the Kinship analysis option. Keyword options
 should be specified in the control file. 
 """
@@ -127,6 +129,8 @@ function Kinship(control_file = ""; args...)
 end # function Kinship
 
 """
+  compare_kinships(genotyped_pedigree, genotyped_person, snpdata,person_frame, keyword)
+
 This function orchestrates the comparison of theoretical
 and empirical kinships including Fisher z-scores.
 The results are placed in a dataframe.
@@ -269,6 +273,8 @@ function compare_kinships(genotyped_pedigree::Pedigree,
 end # function compare_kinships
 
 """
+  theoretical_coefficients(pedigree::Pedigree, person::Person, keyword::Dict{AbstractString, Any}
+
 This function orchestrates the computation via gene dropping
 of the Kinship and Delta7 coefficients deterministically
 and Jacquard's 9 identity coefficients stochastically.
@@ -362,6 +368,8 @@ function theoretical_coefficients(pedigree::Pedigree, person::Person,
 end # function theoretical_coefficients
 
 """
+  kinship_matrix(pedigree::Pedigree, person::Person, ped::Int, xlinked::Bool)
+
 This function recursively computes a kinship matrix for each pedigree.
 Children must appear after parents. Each pedigree occurs in a block
 demarked by its start and finish and is defined implicitly by
@@ -417,6 +425,8 @@ function kinship_matrix(pedigree::Pedigree, person::Person,
 end # function kinship_matrix
 
 """
+  delta7_matrix(pedigree::Pedigree, person::Person, kinship::Matrix{Float64}, ped::Int)
+
 This function computes the Delta7 matrix for non-inbred pedigrees.
 Children must appear after parents. Each pedigree occurs in a block
 and is defined implicitly by the provided fathers and mothers.
@@ -452,6 +462,8 @@ function delta7_matrix(pedigree::Pedigree, person::Person,
 end # function delta7_matrix
 
 """
+  jacquard_coefficients(pedigree, person, ped::Int, replicates::Int, xlinked::Bool)
+
 This function computes Jacquard's nine condensed identity
 coefficients for each pedigree by simulation. Children
 must appear after parents. A pedigree is defined implicitly
@@ -517,6 +529,8 @@ function jacquard_coefficients(pedigree::Pedigree, person::Person,
 end # function jacquard_coefficients
 
 """
+  cotwin_extension!(x::Matrix{Float64}, pedigree::Pedigree, person::Person, ped::Int)
+
 This function extends identity coefficients to co-twins.
 """
 function cotwin_extension!(x::Matrix{Float64}, pedigree::Pedigree,
@@ -537,6 +551,8 @@ function cotwin_extension!(x::Matrix{Float64}, pedigree::Pedigree,
 end # function cotwin_extension!
 
 """
+  identity_state(source1::Vector{Int}, source2::Vector{Int})
+
 This function assigns one of the 9 condensed identity states
 to two sourced genotypes. The integer n is the number of
 unique genes among the 4 sampled genes.
@@ -588,6 +604,8 @@ end # function make_plot_pairs
 
 
 """
+  make_compare_plot(x::DataFrame, plot_pair::Vector{String})
+
 This function composes the comparison plot using PlotlyJS.
 """
 function make_compare_plot(x::DataFrame, plot_pair::Vector{String})
@@ -609,6 +627,8 @@ end # function make_compare_plot
 
 
 """
+  compute_fishers_z(x::DataFrame)
+
 This function computes Fisher's atanh transform and standardizes.
 """
 function compute_fishers_z(x::DataFrame)
@@ -622,6 +642,8 @@ end # function compute_fishers_z
 
 
 """
+  plot_fisher_z(x::DataFrame, plot_pair::Vector{String})
+
 This function plots the transformed data using PlotlyJS.
 """
 function plot_fisher_z(x::DataFrame, plot_pair::Vector{String})
