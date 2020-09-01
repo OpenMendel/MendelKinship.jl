@@ -110,7 +110,7 @@ function Kinship(control_file = ""; args...)
   else
     kinship_frame = theoretical_coefficients(pedigree, person, keyword)
   end
-  display(kinship_frame)
+  # display(kinship_frame)
 
   if execution_error
     println(" \n \nERROR: Mendel terminated prematurely!\n")

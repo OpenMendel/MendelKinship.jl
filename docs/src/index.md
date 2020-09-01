@@ -1,3 +1,5 @@
+# MendelKinship.jl 
+
 *Julia utilities for computing theoretical/empirical kinship and other identity coefficients*
 
 `MendelKinship.jl` is a component of the umbrella [OpenMendel project](https://github.com/OpenMendel). 
@@ -27,8 +29,8 @@ This package supports Julia `v1.0`+.
 ```@contents
 Pages = [
     "man/introduction.md",
-    "man/keywords.md",
     "man/KinshipTutorial.md"
+    "man/keywords.md",
     "man/api.md"
 ]
 Depth = 2
