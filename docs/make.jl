@@ -9,8 +9,8 @@ makedocs(
         "Home" => "index.md",
         "Introduction" => "man/introduction.md",
         "Keyword Options" => "man/keywords.md",
-        "Tutorial" => "man/KinshipTutorial.md"
-        "API" => "man/api.md",
+        "Tutorial" => "man/KinshipTutorial.md",
+        "API" => "man/api.md"
     ]
 )
 
