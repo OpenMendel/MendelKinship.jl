@@ -412,12 +412,6 @@ git-tree-sha1 = "5b41f03d63400c290bab4e1a49fb9ac36de1084a"
 uuid = "a975b10e-0019-58db-a62f-e48ff68538c9"
 version = "0.7.0"
 
-[[ORCA]]
-deps = ["PlotlyBase"]
-git-tree-sha1 = "21116b7c215347f1759ebb013f89bce3cafb6b4f"
-uuid = "47be7bcc-f1a6-5447-8b36-7eeeff7534fd"
-version = "0.5.0"
-
 [[Observables]]
 git-tree-sha1 = "11832878355305984235a2e90d0e3737383c634c"
 uuid = "510215fc-4207-5dde-b226-833fc4488ee2"

@@ -26,8 +26,10 @@ This package supports Julia `v1.0`+.
 
 ```@contents
 Pages = [
-    "man/api.md",
-    "man/KinshipTutorial.md",
+    "man/introduction.md",
+    "man/keywords.md",
+    "man/KinshipTutorial.md"
+    "man/api.md"
 ]
 Depth = 2
 ```

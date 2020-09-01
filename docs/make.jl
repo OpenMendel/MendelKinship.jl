@@ -7,8 +7,10 @@ makedocs(
     modules = [MendelKinship],
     pages = [
         "Home" => "index.md",
-        "API" => "man/api.md",
+        "Introduction" => "man/introduction.md",
+        "Keyword Options" => "man/keywords.md",
         "Tutorial" => "man/KinshipTutorial.md"
+        "API" => "man/api.md",
     ]
 )
 

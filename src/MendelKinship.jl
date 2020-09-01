@@ -17,14 +17,14 @@ using SnpArrays
 #
 using CSV
 using DataFrames
-using ORCA
 using PlotlyJS
 using StatsBase
 
 export Kinship
 
 """
-This is the wrapper function for the Kinship analysis option.
+This is the wrapper function for the Kinship analysis option. Keyword options
+should be specified in the control file. 
 """
 function Kinship(control_file = ""; args...)
   #
