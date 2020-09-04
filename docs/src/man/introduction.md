@@ -3,6 +3,10 @@
 
 This is a Julia implementation of option 29 of the [Mendel software](https://academic.oup.com/bioinformatics/article/29/12/1568/292810), originally programmed in Fortran. `MendelKinship.jl` contains new features, but its usage largely resembles Mendel by employing *control files* - requiring users to make a file to specify options instead of interacting with Julia directly. This is not the most Julian way of programming or usage experience... but unfortuantely we lack manpower to correct it. 
 
+!!! note
+
+    Please read our [OpenMendel article](https://link.springer.com/article/10.1007/s00439-019-02001-z) which contains a section on **Kinship Comparison**.
+
 ## When to use MendelKinship
 
 `MendelKinship.jl` is capable of calculating the theoretical kinship coefficient $\Phi_{ij}$ as long as a [valid pedigree structure](https://openmendel.github.io/MendelBase.jl/#pedigree-file) is provided. When SNP markers are available, `MendelKinship.jl` can also calculate empirical kinship coefficients using GRM, robust GRM, or Method of Moments methods (see [this paper](https://onlinelibrary.wiley.com/doi/abs/10.1002/gepi.20584) and [this paper](https://academic.oup.com/bioinformatics/article/26/22/2867/228512) for details). Here we recommend the Robust GRM or MoM (default) method because their estimates are more robust in the presence of rare alleles. 
