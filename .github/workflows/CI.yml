@@ -24,11 +24,6 @@ jobs:
           - windows-latest
         arch:
           - x64
-        include:
-          # Add a 1.5 job because that's what Invenia actually uses
-          - os: ubuntu-latest
-            version: 1.5
-            arch: x64
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
@@ -46,6 +41,10 @@ jobs:
             ${{ runner.os }}-${{ matrix.arch }}-test-
             ${{ runner.os }}-${{ matrix.arch }}-
             ${{ runner.os }}-
+      - run: |
+          julia --project=. -e '
+              using Pkg
+              Pkg.update()'
       - uses: julia-actions/julia-buildpkg@latest
       - run: |
           git config --global user.name Tester
