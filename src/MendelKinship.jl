@@ -252,13 +252,13 @@ function compare_kinships(genotyped_pedigree::Pedigree,
   if keyword["kinship_plot"] != "" 
     my_compare_plot = make_compare_plot(kinship_frame, plot_pair)
     # PlotlyBase.savefig(my_compare_plot, keyword["kinship_plot"] * ".pdf")
-    PlotlyJS.savehtml(my_compare_plot, keyword["kinship_plot"] * ".html")
+    PlotlyJS.savefig(my_compare_plot.plot, keyword["kinship_plot"] * ".html")
     println("Kinship plot saved.")
   end
   if keyword["z_score_plot"] != ""
     my_fisher_plot = plot_fisher_z(kinship_frame, plot_pair)
     # PlotlyBase.savefig(my_fisher_plot, keyword["z_score_plot"] * ".pdf")
-    PlotlyJS.savehtml(my_fisher_plot, keyword["z_score_plot"] * ".html")
+    PlotlyJS.savefig(my_fisher_plot.plot, keyword["z_score_plot"] * ".html")
     println("Fisher's plot saved.")
   end
   #
@@ -266,7 +266,7 @@ function compare_kinships(genotyped_pedigree::Pedigree,
   #
   kinship_table_file = string(keyword["kinship_output_file"])
   CSV.write(kinship_table_file, kinship_frame;
-    writeheader = true, delim = keyword["output_field_separator"],
+    header = true, delim = keyword["output_field_separator"],
     missingstring = keyword["output_missing_value"])
 
   return kinship_frame
@@ -362,7 +362,7 @@ function theoretical_coefficients(pedigree::Pedigree, person::Person,
   #
   kinship_table_file = string(keyword["kinship_output_file"])
   CSV.write(kinship_table_file, combined_dataframe;
-    writeheader = true, delim = keyword["output_field_separator"],
+    header = true, delim = keyword["output_field_separator"],
     missingstring = keyword["output_missing_value"])
   return combined_dataframe
 end # function theoretical_coefficients
@@ -610,8 +610,8 @@ This function composes the comparison plot using PlotlyJS.
 """
 function make_compare_plot(x::DataFrame, plot_pair::Vector{String})
 
-  trace1 = scatter(;x=x[:theoretical_kinship], 
-    y=x[:empiric_kinship], mode="markers", 
+  trace1 = scatter(;x=x[!, :theoretical_kinship], 
+    y=x[!, :empiric_kinship], mode="markers", 
     name="empiric kinship", text=plot_pair)
   trace2 = scatter(;x=[1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 0.0],
     y=[1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 0.0], 
@@ -633,8 +633,8 @@ This function computes Fisher's atanh transform and standardizes.
 """
 function compute_fishers_z(x::DataFrame)
 
-  theoretical_transformed = map(atanh, x[:theoretical_kinship])
-  empiric_transformed = map(atanh, x[:empiric_kinship])
+  theoretical_transformed = map(atanh, x[!, :theoretical_kinship])
+  empiric_transformed = map(atanh, x[!, :empiric_kinship])
   difference = empiric_transformed - theoretical_transformed
   new_zscore = zscore(difference) #in StatsBase package
   return [x DataFrame(fishers_zscore = new_zscore)]
@@ -648,7 +648,7 @@ This function plots the transformed data using PlotlyJS.
 """
 function plot_fisher_z(x::DataFrame, plot_pair::Vector{String})
 
-    trace1 = histogram(x=x[:fishers_zscore], text=plot_pair)
+    trace1 = histogram(x=x[!, :fishers_zscore], text=plot_pair)
     data = [trace1]
     layout = Layout(barmode="overlay", 
         title="Z-score plot for Fisher's statistic",

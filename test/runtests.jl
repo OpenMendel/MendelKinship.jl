@@ -10,7 +10,7 @@ cd(datadir)
     Kinship("control_compare_29a.txt")
     @test isfile("kinship_file_output.txt")
  
-    df = CSV.read("kinship_file_output.txt") # read result
+    df = CSV.read("kinship_file_output.txt", DataFrame) # read result
     @test size(df) == (22578, 7)
     @test df[1, 1] == 14
     @test df[1, 2] == 14
