@@ -67,9 +67,17 @@ jobs:
           git config --global user.name name
           git config --global user.email email
           git config --global github.user username
+      - run: | # add unregistered packages first
+          julia --project=docs -e '
+            using Pkg
+            pkg"add https://github.com/OpenMendel/SnpArrays.jl"
+            pkg"add https://github.com/OpenMendel/MendelSearch.jl"
+            pkg"add https://github.com/OpenMendel/MendelBase.jl"
+            pkg"add https://github.com/OpenMendel/MendelKinship.jl"'
       - run: |
           julia --project=docs -e '
             using Pkg
+            Pkg.add("Documenter")
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: |
