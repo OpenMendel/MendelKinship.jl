@@ -386,13 +386,17 @@ uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 
 [[MendelBase]]
 deps = ["CSV", "DataFrames", "Distributions", "GLM", "LinearAlgebra", "MendelSearch", "Missings", "Printf", "Random", "SnpArrays", "Statistics", "StatsBase", "StatsModels"]
-path = "/Users/kose/.julia/dev/MendelBase"
+git-tree-sha1 = "8ed4f7c3247c12113e66a19c8e6e9e63c1d6ee15"
+repo-rev = "master"
+repo-url = "https://github.com/OpenMendel/MendelBase.jl"
 uuid = "4fb2d825-8540-5432-a3a3-b9ff66df2cb5"
 version = "0.8.1"
 
 [[MendelSearch]]
 deps = ["LinearAlgebra", "Printf"]
-path = "/Users/kose/.julia/dev/MendelSearch"
+git-tree-sha1 = "2c315b91fc42cb29641167209bdeaa77082b9a3e"
+repo-rev = "master"
+repo-url = "https://github.com/OpenMendel/MendelSearch.jl"
 uuid = "4fa469e6-9890-5c68-874e-584f43f9cdde"
 version = "0.8.0"
 
