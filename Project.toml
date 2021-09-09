@@ -17,7 +17,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 WebIO = "0f1e0344-ec1d-5b48-a673-e5cf874b6c29"
 
 [compat]
-CSV = "0.8"
+CSV = "0.8, 0.9"
 DataFrames = "0.20, 0.21, 0.22, 1"
 PlotlyJS = "0.18"
 SnpArrays = "0.3.10"
